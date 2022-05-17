@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">FlowSensor9</string>
-    <string name="edit_message">Enter a message</string>
-    <string name="button_send">Send</string>
+    <string name="app_name">FlowSensor</string>
+    <string name="BLE_start">Bluetooth on</string>
 </resources>

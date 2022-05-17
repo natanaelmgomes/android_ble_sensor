@@ -1,3 +1,4 @@
+/*
 package com.example.flowsensor12;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,4 +20,4 @@ public class DisplayMessageActivity extends AppCompatActivity {
         TextView textView = findViewById(R.id.textView);
         textView.setText(message);
     }
-}
+}*/
