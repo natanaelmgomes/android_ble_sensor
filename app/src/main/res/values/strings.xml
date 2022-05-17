@@ -3,4 +3,6 @@
     <string name="BLE_start">Bluetooth on</string>
     <string name="Search_start">Search on</string>
     <string name="Search_close">Search off</string>
+    <string name="device_name">Device Name</string>
+    <string name="device_mac_address">Mac Address</string>
 </resources>

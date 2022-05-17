@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -52,6 +53,17 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             Toast.makeText(MainActivity.this, "Your device doesn't support bluetooth", Toast.LENGTH_SHORT).show();
+        }
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        if (pairedDevices.size() != 0){
+            for (BluetoothDevice device : pairedDevices){
+                String deviceName = device.getName();
+                TextView textView = findViewById(R.id.textView);
+                textView.setText(deviceName);
+                String deviceHardwareAddress = device.getAddress(); // MAC address
+                TextView textView2 = findViewById(R.id.textView2);
+                textView2.setText(deviceHardwareAddress);
+            }
         }
     }
     //开启蓝牙搜索
