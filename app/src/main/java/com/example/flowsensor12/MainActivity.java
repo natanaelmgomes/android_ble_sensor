@@ -42,10 +42,6 @@ public class MainActivity extends AppCompatActivity {
             if (!bluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent,REQUEST_ENABLE_BT);
-                //注册对蓝牙状态功能的监听事件
-                //实例化IntentFilter对象
-                IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);      //可以用构造方法添加Action
-                context.registerReceiver(bluetoothStateBroadcastReceive,filter);
             }else {
                 Toast.makeText(context,"Bluetooth on", Toast.LENGTH_LONG).show();
             }
