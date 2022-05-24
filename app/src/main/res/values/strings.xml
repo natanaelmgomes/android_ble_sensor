@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">FlowSensor</string>
-    <string name="BLE_start">Bluetooth on</string>
-    <string name="Search_start">Search on</string>
-    <string name="Search_close">Search off</string>
-    <string name="device_name">Device Name</string>
-    <string name="device_mac_address">Mac Address</string>
+    <string name="open_bt">Bluetooth on</string>
+    <string name="search">Search on</string>
+    <string name="send_msg">Send</string>
+    <string name="connect_error">Connection Failure</string>
+    <string name="connect_success">Connection Success</string>
+    <string name="connecting">Connecting</string>
+    <string name="connect_state">Connection State</string>
+    <string name="send_msgs">Send message：</string>
+    <string name="send_msg_error">Failed to send message：</string>
+    <string name="get_msg">Message captured：</string>
 </resources>
