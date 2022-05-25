@@ -16,15 +16,12 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-
 import com.example.flowsensor12.adapter.BlueToothDeviceAdapter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //private TextView text_msg;
     private final int BUFFER_SIZE = 1024;
     private static final String NAME = "Sensor";
-    private static final UUID FS_UUID = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
+    private static final UUID FS_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private ConnectThread connectThread;
     //private ListenerThread listenerThread;
 
@@ -52,7 +49,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //listenerThread = new ListenerThread();
         //listenerThread.start();
     }
-
 
     public void initView() {
         findViewById(R.id.btn_openBT).setOnClickListener(this);
@@ -72,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 BluetoothDevice device = (BluetoothDevice) adapter.getItem(position);
                 //连接设备
                 connectDevice(device);
-
             }
         });
     }
@@ -160,9 +155,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         text_state.setText(getResources().getString(R.string.connecting));
         try {
             //创建Socket
-            BluetoothSocket socket = device.createRfcommSocketToServiceRecord(FS_UUID);
-            //启动连接线程
-            connectThread = new ConnectThread(socket, true);
+            BluetoothSocket socket = device.createInsecureRfcommSocketToServiceRecord(FS_UUID);
+            connectThread = new ConnectThread(socket, device, true);
             connectThread.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -205,62 +199,66 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //连接线程
     private class ConnectThread extends Thread {
-
         private BluetoothSocket socket;
+        private BluetoothDevice device;
         private boolean activeConnect;
         InputStream inputStream;
         OutputStream outputStream;
-
-        private ConnectThread(BluetoothSocket socket, boolean connect) {
+        private ConnectThread(BluetoothSocket socket, BluetoothDevice device, boolean connect) {
             this.socket = socket;
             this.activeConnect = connect;
+            this.device = device;
         }
 
         @Override
         public void run() {
-            mBluetoothAdapter.cancelDiscovery();
-            try {
-                //如果是自动连接 则调用连接方法
-                if (activeConnect) {
-                    socket.connect();
-                }
-                text_state.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        text_state.setText(getResources().getString(R.string.connect_success));
-                    }
-                });
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
+            new Thread() {
+                public void run() {
+                    try {
+                        //如果是自动连接 则调用连接方法
+                        if (activeConnect) {
+                            socket.connect();
+                        }
+                        text_state.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_state.setText(getResources().getString(R.string.connect_success));
+                            }
+                        });
+                        inputStream = socket.getInputStream();
+                        outputStream = socket.getOutputStream();
 
-                byte[] buffer = new byte[BUFFER_SIZE];
-                int bytes;
-                while (true) {
-                    //读取数据
-                    bytes = inputStream.read(buffer);
-                    if (bytes > 0) {
-                        final byte[] data = new byte[bytes];
-                        System.arraycopy(buffer, 0, data, 0, bytes);
+                        byte[] buffer = new byte[BUFFER_SIZE];
+                        int bytes;
+                        while (true) {
+                            //读取数据
+                            bytes = inputStream.read(buffer);
+                            if (bytes > 0) {
+                                final byte[] data = new byte[bytes];
+                                System.arraycopy(buffer, 0, data, 0, bytes);
                         /*text_msg.post(new Runnable() {
                             @Override
                             public void run() {
                                 text_msg.setText(getResources().getString(R.string.get_msg) + new String(data));
                             }
                         });*/
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        text_state.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                text_state.setText(getResources().getString(R.string.connect_error));
+                            }
+                        });
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                text_state.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        text_state.setText(getResources().getString(R.string.connect_error));
-                    }
-                });
-            }
+            }.start();
         }
     }
 }
+
 
 
 /*        public void sendMsg(final String msg) {
