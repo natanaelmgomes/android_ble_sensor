@@ -1,6 +1,5 @@
 package com.example.flowsensor12.adapter;
 
-import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,9 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-
-import androidx.core.app.ActivityCompat;
-
 import com.example.flowsensor12.R;
 
 public class BlueToothDeviceAdapter extends ArrayAdapter<BluetoothDevice> {
