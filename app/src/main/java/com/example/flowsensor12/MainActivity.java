@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //connectDevice(device);
                 if (!isConnecting) {
                     isConnecting = true;
-                    BluetoothDevice bluetoothDevice = mDatas.get(position);
+                    BluetoothDevice bluetoothDevice = (BluetoothDevice) adapter.getItem(position);
                     //连接设备
                     text_state.setText(getResources().getString(R.string.connecting));
                     //f (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
