@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">FlowSensor</string>
-    <string name="open_bt">Bluetooth on</string>
-    <string name="search">Search on</string>
-    <string name="connect_error">Connection Failure</string>
     <string name="connect_success">Connection Success</string>
     <string name="connect_over">Connection Over</string>
     <string name="searching">Searching</string>
@@ -11,11 +8,8 @@
     <string name="connect_state">Connection State</string>
     <string name="get_msg">Message captured：</string>
     <string name="name">Name</string>
-    <string name="introduce">Introduce</string>
-    <string name="textview">TextView</string>
-    <string name="shower_str11">其他方式绑定</string>
-    <string name="shower_str12">停止搜索</string>
-    <string name="shower_str4">搜索中</string>
-    <string name="shower_str5">未绑定</string>
-    <string name="shower_str6">搜索终止</string>
+    <string name="button">Button</string>
+    <string name="Start">Start</string>
+    <string name="Connected_Device">Connected Device:</string>
+    <string name="msg">Received Message</string>
 </resources>
