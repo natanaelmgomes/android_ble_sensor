@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //private BluetoothLeScanner scanner;
     private List<BluetoothDevice> mDatas;
 
-    //服务和特征值
+    //Service and Characteristic
     private UUID notify_UUID_service=UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
     private UUID notify_UUID_chara= UUID.fromString("A7EA14CF-1100-43BA-AB86-1D6E136A2E9E");
     @Override
@@ -97,8 +97,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void onClick(View v) {
         switch (v.getId()) {
-            //开始按钮
+            //Start button
             case R.id.Start:
+                checkPermissions();
                 BluetoothStart();
                 BluetoothSearch();
                 break;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    //开启蓝牙
+    //Turn on BLE
     private void BluetoothStart() {
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, "This device does not support the Bluetooth function", Toast.LENGTH_SHORT).show();
@@ -119,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //搜索蓝牙设备
+    //Search on
     private void BluetoothSearch() {
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(MainActivity.this, "This device does not support BLE", Toast.LENGTH_SHORT).show();
@@ -129,13 +130,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if ((checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                 || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 200);
-        }//GPS开启
+        }//GPS on
         isScaning=true;
         mBluetoothAdapter.startLeScan(scanCallback);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                //结束扫描
+                //Search off
                 mBluetoothAdapter.stopLeScan(scanCallback);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -164,13 +165,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    //获取已经配对过的设备
+    //Get bounded devices
     private void getBoundedDevices() {
-        //获取已经配对过的设备
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        //避免重复添加已经绑定过的设备
+        //clear the list
         adapter.clear();
-        //将其添加到设备列表中
+        //add to the list
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 adapter.add(device);
@@ -178,38 +178,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //连接蓝牙设备
+    //Connect
     private BluetoothGattCallback gattCallback=new BluetoothGattCallback() {
-        //断开或连接 状态发生变化时调用
+        //unconnect or connect
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (status==BluetoothGatt.GATT_SUCCESS){
-                //连接成功
+                //connection success
                 if (newState== BluetoothGatt.STATE_CONNECTED){
-                    //发现服务
+                    //find service
                     gatt.discoverServices();
                 }
             }else{
-                //连接失败
+                //connection failure
                 text_state.setText(getResources().getString(R.string.connect_over));
                 mBluetoothGatt.close();
                 isConnecting=false;
             }
         }
 
-        //发现设备（真正建立连接）
+        //discovery devices
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
-            //直到这里才是真正建立了可通信的连接
+            //Only here is the communicable connection really established
             isConnecting=false;
-            //订阅通知
+            //Subscribe to notifications
             BluetoothGattService service;
             service = mBluetoothGatt.getService(notify_UUID_service);
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(notify_UUID_chara);
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-            //获取到Notify当中的Descriptor通道 然后再进行注册
+            //Get the Descriptor channel in Notify and then register
             if (descriptor != null) {
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 mBluetoothGatt.writeDescriptor(descriptor);
@@ -223,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
         }
 
-        //接收到硬件返回的数据
+        //Receive data returned by hardware
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
@@ -257,6 +257,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
         }
     };
+    private void checkPermissions() {
+        RxPermissions rxPermissions = new RxPermissions(MainActivity.this);
+        rxPermissions.request(android.Manifest.permission.ACCESS_FINE_LOCATION).subscribe(new io.reactivex.functions.Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                if (aBoolean) {
+                    // User has agreed to this permission
+                    BluetoothSearch();
+                } else {
+                    // The user denied the permission and checked "Don't ask again"
+                    Toast.makeText(MainActivity.this, "The user can only use it after enabling the permission", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
 
     public static float[] ByteArrayToFloatArray(byte[] data)
     {
@@ -272,6 +287,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return result;
     }
+
 }
 
 
