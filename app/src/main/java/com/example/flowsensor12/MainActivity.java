@@ -19,11 +19,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.flowsensor12.adapter.BlueToothDeviceAdapter;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -224,29 +228,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             final byte[] data=characteristic.getValue();
+            //float f = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            float f = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT,0);
+            //String s = characteristic.getStringValue(0);
+            String s= String.valueOf(f);
+            //int b = Math.round(f);
+            //String ss = String.valueOf(b);
+            /*float[] flow_voltage;
+            try{
+                if(data.length==4){
+                    flow_voltage = ByteArrayToFloatArray(data);
+                }
+                if(data.length==8){
+                    flow_voltage = ByteArrayToFloatArray(data);
+                }
+                if(data.length==12){
+                    flow_voltage = ByteArrayToFloatArray(data);
+                }
+                if(data.length==16){
+                    flow_voltage = ByteArrayToFloatArray(data);
+                }
+            }catch (Exception e){}*/
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    text_msg.setText(new String(data));
+                    text_msg.setText(s);
                 }
             });
         }
     };
 
-private static final String HEX = "0123456789abcdef";
-public static String bytes2hex(byte[] bytes)
+    public static float[] ByteArrayToFloatArray(byte[] data)
+    {
+        float[] result = new float[data.length / 4];
+        int temp = 0;
+        for (int i = 0; i < data.length; i += 4)
         {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes)
-        {
-        // 取出这个字节的高4位，然后与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
-        sb.append(HEX.charAt((b >> 4) & 0x0f));
-        // 取出这个字节的低位，与0x0f与运算，得到一个0-15之间的数据，通过HEX.charAt(0-15)即为16进制数
-        sb.append(HEX.charAt(b & 0x0f));
+            temp = temp | (data[i] & 0xff) << 0;
+            temp = temp | (data[i+1] & 0xff) << 8;
+            temp = temp | (data[i+2] & 0xff) << 16;
+            temp = temp | (data[i+3] & 0xff) << 24;
+            result[i / 4] = Float.intBitsToFloat(temp);
         }
-        return sb.toString();
-        }
-
+        return result;
+    }
 }
 
 

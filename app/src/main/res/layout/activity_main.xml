@@ -60,15 +60,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
-    <ListView
-        android:id="@+id/listView"
-        android:layout_width="379dp"
-        android:layout_height="534dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_msg" />
-
     <TextView
         android:id="@+id/text_msg"
         android:layout_width="wrap_content"
@@ -79,5 +70,14 @@
         app:layout_constraintHorizontal_bias="0.547"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/message_captured" />
+
+    <ListView
+        android:id="@+id/listView"
+        android:layout_width="379dp"
+        android:layout_height="534dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_msg" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
