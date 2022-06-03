@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import android.util.Log;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             //Start button
             case R.id.Start:
-                checkPermissions();
+//                checkPermissions();
                 BluetoothStart();
                 BluetoothSearch();
                 break;
@@ -257,21 +258,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
         }
     };
-    private void checkPermissions() {
-        RxPermissions rxPermissions = new RxPermissions(MainActivity.this);
-        rxPermissions.request(android.Manifest.permission.ACCESS_FINE_LOCATION).subscribe(new io.reactivex.functions.Consumer<Boolean>() {
-            @Override
-            public void accept(Boolean aBoolean) throws Exception {
-                if (aBoolean) {
-                    // User has agreed to this permission
-                    BluetoothSearch();
-                } else {
-                    // The user denied the permission and checked "Don't ask again"
-                    Toast.makeText(MainActivity.this, "The user can only use it after enabling the permission", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-    }
+//    private void checkPermissions() {
+//        RxPermissions rxPermissions = new RxPermissions(MainActivity.this);
+//        rxPermissions.request(android.Manifest.permission.ACCESS_FINE_LOCATION).subscribe(new io.reactivex.functions.Consumer<Boolean>() {
+//            @Override
+//            public void accept(Boolean aBoolean) throws Exception {
+//                if (aBoolean) {
+//                    // User has agreed to this permission
+//                    BluetoothSearch();
+//                } else {
+//                    // The user denied the permission and checked "Don't ask again"
+//                    Toast.makeText(MainActivity.this, "The user can only use it after enabling the permission", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//        });
+//    }
 
     public static float[] ByteArrayToFloatArray(byte[] data)
     {
