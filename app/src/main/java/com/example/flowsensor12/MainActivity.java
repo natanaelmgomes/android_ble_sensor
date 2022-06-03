@@ -23,7 +23,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import com.example.flowsensor12.adapter.BlueToothDeviceAdapter;
 
 import java.nio.ByteBuffer;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
 import android.util.Log;
 
 
@@ -42,8 +46,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView text_state;
     private TextView text_msg;
     private TextView text_name;
-    private boolean isScaning=false;
-    private boolean isConnecting=false;
+    private boolean isScaning = false;
+    private boolean isConnecting = false;
     private BluetoothGatt mBluetoothGatt;
     private static final long SCAN_PERIOD = 10000;
     //private ScanCallback scanCallback;
@@ -53,8 +57,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private List<Float> received_data_list;
 
     //Service and Characteristic
-    private UUID notify_UUID_service=UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
-    private UUID notify_UUID_chara= UUID.fromString("A7EA14CF-1100-43BA-AB86-1D6E136A2E9E");
+    private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
+    private UUID notify_UUID_chara = UUID.fromString("A7EA14CF-1100-43BA-AB86-1D6E136A2E9E");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-    private void initData(){
+    private void initData() {
         mDatas = new ArrayList<>();
         received_data_list = new ArrayList<Float>();
     }
@@ -102,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             //Start button
             case R.id.Start:
-                Log.d("MainActivity","Start button clicked.");
+                Log.d("MainActivity", "Start button clicked.");
 //                checkPermissions();
                 BluetoothStart();
                 BluetoothSearch();
@@ -113,13 +118,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // Turn on BLE
     private void BluetoothStart() {
-        Log.d("MainActivity","BluetoothStart.");
+        Log.d("MainActivity", "BluetoothStart.");
         if (mBluetoothAdapter == null) {
-            Log.d("MainActivity","BluetoothAdapter is null.");
+            Log.d("MainActivity", "BluetoothAdapter is null.");
             Toast.makeText(this, "This device does not support the Bluetooth function", Toast.LENGTH_SHORT).show();
         } else {
             if (!mBluetoothAdapter.isEnabled()) {
-                Log.d("MainActivity","BluetoothAdapter is not enabled.");
+                Log.d("MainActivity", "BluetoothAdapter is not enabled.");
                 Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 startActivityForResult(turnOn, 0);
                 Toast.makeText(MainActivity.this, "Please turn on Bluetooth", Toast.LENGTH_SHORT).show();
@@ -129,19 +134,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // Search on
     private void BluetoothSearch() {
-        Log.d("MainActivity","BluetoothSearch.");
+        Log.d("MainActivity", "BluetoothSearch.");
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Log.d("MainActivity","This device does not support Bluetooth Low Energy.");
+            Log.d("MainActivity", "This device does not support Bluetooth Low Energy.");
             Toast.makeText(MainActivity.this, "This device does not support BLE", Toast.LENGTH_SHORT).show();
             finish();
         }
         getBoundedDevices();
         if ((checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                 || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            Log.d("MainActivity","Location permission is not granted.");
+            Log.d("MainActivity", "Location permission is not granted.");
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 200);
         } // GPS on
-        isScaning=true;
+        isScaning = true;
         mBluetoothAdapter.startLeScan(scanCallback);
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -151,14 +156,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        isScaning=false;
+                        isScaning = false;
                     }
                 });
             }
-        },10000);
+        }, 10000);
     }
-    private void stopScanDevice(){
-        isScaning=false;
+
+    private void stopScanDevice() {
+        isScaning = false;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         mBluetoothAdapter.stopLeScan(scanCallback);
     }
     BluetoothAdapter.LeScanCallback scanCallback=new BluetoothAdapter.LeScanCallback() {
