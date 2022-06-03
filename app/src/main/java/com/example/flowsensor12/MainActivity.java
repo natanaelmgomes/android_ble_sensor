@@ -170,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     adapter.add(device);
                     mDatas.add(device);
                 }
+                // check if device has the service in the advertisement data, if it does, then connect to it
             }
 
         }
