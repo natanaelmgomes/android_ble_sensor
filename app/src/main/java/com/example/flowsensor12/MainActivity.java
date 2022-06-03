@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //private ScanCallback scanCallback;
     //private BluetoothLeScanner scanner;
     private List<BluetoothDevice> mDatas;
+    private float ble_rx_counter = 0;
+    private List<Float> received_data_list;
 
     //Service and Characteristic
     private UUID notify_UUID_service=UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -78,11 +80,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     stopScanDevice();
                     text_state.setText(getResources().getString(R.string.search_over));
                 }
-                //连接设备
+                // Connecting to the device
                 if (!isConnecting) {
                     isConnecting = true;
                     BluetoothDevice bluetoothDevice = (BluetoothDevice) adapter.getItem(position);
-                    //连接设备
                     text_state.setText(getResources().getString(R.string.connecting));
                     text_name.setText(bluetoothDevice.getName());
                     mBluetoothGatt = bluetoothDevice.connectGatt(MainActivity.this, true, gattCallback, TRANSPORT_LE);
@@ -93,13 +94,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData(){
-        mDatas=new ArrayList<>();
+        mDatas = new ArrayList<>();
+        received_data_list = new ArrayList<Float>();
     }
 
     public void onClick(View v) {
         switch (v.getId()) {
             //Start button
             case R.id.Start:
+                Log.d("MainActivity","Start button clicked.");
 //                checkPermissions();
                 BluetoothStart();
                 BluetoothSearch();
@@ -108,12 +111,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    //Turn on BLE
+    // Turn on BLE
     private void BluetoothStart() {
+        Log.d("MainActivity","BluetoothStart.");
         if (mBluetoothAdapter == null) {
+            Log.d("MainActivity","BluetoothAdapter is null.");
             Toast.makeText(this, "This device does not support the Bluetooth function", Toast.LENGTH_SHORT).show();
         } else {
             if (!mBluetoothAdapter.isEnabled()) {
+                Log.d("MainActivity","BluetoothAdapter is not enabled.");
                 Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
                 startActivityForResult(turnOn, 0);
                 Toast.makeText(MainActivity.this, "Please turn on Bluetooth", Toast.LENGTH_SHORT).show();
@@ -121,17 +127,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //Search on
+    // Search on
     private void BluetoothSearch() {
+        Log.d("MainActivity","BluetoothSearch.");
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Log.d("MainActivity","This device does not support Bluetooth Low Energy.");
             Toast.makeText(MainActivity.this, "This device does not support BLE", Toast.LENGTH_SHORT).show();
             finish();
         }
         getBoundedDevices();
         if ((checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                 || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            Log.d("MainActivity","Location permission is not granted.");
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 200);
-        }//GPS on
+        } // GPS on
         isScaning=true;
         mBluetoothAdapter.startLeScan(scanCallback);
         new Handler().postDelayed(new Runnable() {
@@ -166,11 +175,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    //Get bounded devices
+    // Get bounded devices
     private void getBoundedDevices() {
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
         //clear the list
         adapter.clear();
+        initData();
         //add to the list
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
@@ -179,38 +189,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    //Connect
+    // Connect
     private BluetoothGattCallback gattCallback=new BluetoothGattCallback() {
-        //unconnect or connect
+        // unconnect or connect
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (status==BluetoothGatt.GATT_SUCCESS){
-                //connection success
+                // connection success
                 if (newState== BluetoothGatt.STATE_CONNECTED){
-                    //find service
+                    // find service
                     gatt.discoverServices();
                 }
             }else{
-                //connection failure
+                // connection failure
                 text_state.setText(getResources().getString(R.string.connect_over));
                 mBluetoothGatt.close();
                 isConnecting=false;
             }
         }
 
-        //discovery devices
+        // discovery devices
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
-            //Only here is the communicable connection really established
+            // Only here is the communicable connection really established
             isConnecting=false;
-            //Subscribe to notifications
+            // Subscribe to notifications
             BluetoothGattService service;
             service = mBluetoothGatt.getService(notify_UUID_service);
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(notify_UUID_chara);
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-            //Get the Descriptor channel in Notify and then register
+            // Get the Descriptor channel in Notify and then register
             if (descriptor != null) {
                 descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 mBluetoothGatt.writeDescriptor(descriptor);
@@ -224,32 +234,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
         }
 
-        //Receive data returned by hardware
+        // Receive data returned by hardware
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+//            Log.d("MainActivity","onCharacteristicChanged.");
             super.onCharacteristicChanged(gatt, characteristic);
-            final byte[] data=characteristic.getValue();
-            //float f = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).getFloat();
-            float f = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT,0);
+            final byte[] data = characteristic.getValue();
+//            Log.d("MainActivity","data:"+data);
+            ByteBuffer buffer = ByteBuffer.wrap(data);
+            float f1 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+
+//            float f = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+//            Log.d("MainActivity","f:"+f);
+            float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+//            Log.d("MainActivity","f1:"+f1+" f2:"+f2+" f3:"+f3);
+//            float f = characteristic.getFloatValue(BluetoothGattCharacteristic.FORMAT_FLOAT,0);
             //String s = characteristic.getStringValue(0);
-            String s= String.valueOf(f);
+            String s= String.valueOf("f1:"+f1+" f2:"+f2+" f3:"+f3);
+            if (f1 - ble_rx_counter > 1.01)
+            {
+                Log.d("MainActivity","Lost packages: " + (f1-ble_rx_counter));
+            }
+            ble_rx_counter = f1;
+
+            received_data_list.add(f1);
+            received_data_list.add(f2);
+            received_data_list.add(f3);
+
+            Log.d("MainActivity","received_data_list: "+received_data_list.size());
+
+
             //int b = Math.round(f);
             //String ss = String.valueOf(b);
-            /*float[] flow_voltage;
-            try{
-                if(data.length==4){
-                    flow_voltage = ByteArrayToFloatArray(data);
-                }
-                if(data.length==8){
-                    flow_voltage = ByteArrayToFloatArray(data);
-                }
-                if(data.length==12){
-                    flow_voltage = ByteArrayToFloatArray(data);
-                }
-                if(data.length==16){
-                    flow_voltage = ByteArrayToFloatArray(data);
-                }
-            }catch (Exception e){}*/
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
