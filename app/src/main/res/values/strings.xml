@@ -3,14 +3,11 @@
     <string name="connect_success">Connection Success</string>
     <string name="connect_fail">Connection Fail</string>
     <string name="searching">Searching</string>
-    <string name="search_over">Search Over</string>
     <string name="connecting">Connecting</string>
     <string name="connect_state">Connection State</string>
     <string name="search_state">Search State</string>
     <string name="get_msg">Message captured：</string>
-    <string name="name">Name</string>
-    <string name="button">Button</string>
-    <string name="Start">Start</string>
+    <string name="Save">Save</string>
     <string name="Connected_Device">Connected Device:</string>
     <string name="msg">Received Message</string>
 </resources>
