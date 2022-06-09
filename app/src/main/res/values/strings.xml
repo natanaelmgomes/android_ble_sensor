@@ -10,4 +10,10 @@
     <string name="Save">Save</string>
     <string name="Connected_Device">Connected Device:</string>
     <string name="msg">Received Message</string>
+    <string name="tester_name">Tester name</string>
+    <string name="sensor_id_1">Sensor 1 ID</string>
+    <string name="sensor_id_2">Sensor 2 ID</string>
+    <string name="flow_rate">Flow rate</string>
+    <string name="backpressure">Backpressure</string>
+    <string name="done">Done</string>
 </resources>

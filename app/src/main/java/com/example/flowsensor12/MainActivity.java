@@ -16,41 +16,31 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.ParcelUuid;
+import android.os.Parcelable;
+import android.provider.Settings;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
 import com.example.flowsensor12.adapter.BlueToothDeviceAdapter;
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import android.util.Log;
 
 
@@ -61,15 +51,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button Save;
     private TextView text_msg;
     private TextView text_name;
-    private boolean isScaning = false;
-    private boolean isConnecting = false;
     private BluetoothGatt mBluetoothGatt;
     private static final long SCAN_PERIOD = 999999999;
     private BluetoothLeScanner scanner;
-    private List<BluetoothDevice> mDatas;
     private float ble_rx_counter = 0;
     private List<Float> received_data_list;
-    private List<String> received_data_list_string;
+    private ArrayList<String> received_data_list_string;
 
     //Service and Characteristic
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -80,9 +67,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        initPermission();
         initView();
         initData();
+        initPermission();
         initStart();
     }
 
@@ -95,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData() {
-        mDatas = new ArrayList<>();
         received_data_list = new ArrayList<Float>();
         received_data_list_string = new ArrayList<String>();
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -119,15 +105,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.d("MainActivity", "Location permission is not granted.");
             requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 200);
         } // GPS
-
-        if ((checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) || (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
-            Log.d("MainActivity", "Storage permission is not granted.");
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 200);
-        } // Storage
     }
 
     public void onClick(View v) {
-
+        Intent intent = new Intent(MainActivity.this, save_option.class);
+        Bundle bundle = new Bundle();
+        bundle.putStringArrayList("received_data_list_string", received_data_list_string);
+        intent.putExtras(bundle);
+        startActivity(intent);
     }
 
     // Turn on BLE
@@ -146,7 +131,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         Log.d("MainActivity", "BluetoothSearch.");
         getBoundedDevices();
-        isScaning = true;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
@@ -161,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        isScaning = false;
+
                     }
                 });
             }
@@ -169,8 +153,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void stopScanDevice() {
-        isScaning = false;
-        //mBluetoothAdapter.stopLeScan(scanCallback);
         scanner.stopScan(scanCallback);
     }
 
@@ -183,7 +165,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (result.getScanRecord().getServiceUuids() != null) {
                 if (result.getScanRecord().getServiceUuids().size() > 0) {
                     if (result.getScanRecord().getServiceUuids().get(0).getUuid().toString().equals("a7ea14cf-1000-43ba-ab86-1d6e136a2e9e")) {
-                        isConnecting = true;
                         connection_state.setText(getResources().getString(R.string.connecting));
                         text_name.setText(device.getName());
                         mBluetoothGatt = device.connectGatt(MainActivity.this, true, gattCallback, TRANSPORT_LE);
@@ -222,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // connection failure
                 connection_state.setText(getResources().getString(R.string.connect_fail));
                 mBluetoothGatt.close();
-                isConnecting = false;
             }
         }
 
@@ -232,7 +212,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             super.onServicesDiscovered(gatt, status);
             // Only here is the communicable connection really established
-            isConnecting = false;
             // Subscribe to notifications
             BluetoothGattService service;
             service = mBluetoothGatt.getService(notify_UUID_service);
@@ -271,7 +250,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             received_data_list.add(f2);
             received_data_list.add(f3);
             //Log.d("MainActivity","received_data_list: "+received_data_list.size());
-
+            received_data_list_string = new ArrayList<>();
+            for (int i = 0; i < received_data_list.size(); i++) {
+                received_data_list_string.add(String.valueOf(received_data_list.get(i)));
+            }
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -281,16 +263,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    public void save(View view) throws IOException {
-        CSVWriter csvWriter = new CSVWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/" + "data.csv"));
-        received_data_list_string = new ArrayList<>();
-        for (int i = 0; i < received_data_list.size(); i++) {
-            received_data_list_string.add(String.valueOf(received_data_list.get(i)));
-        }
-        csvWriter.writeNext(received_data_list_string.toArray(new String[received_data_list_string.size()]));
-        csvWriter.close();
-        Log.d("MainActivity", "Saved.");
-    }
 }
 
 
