@@ -2,7 +2,6 @@ package com.example.flowsensor12;
 
 
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
-
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -18,37 +17,26 @@ import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.Parcelable;
-import android.provider.Settings;
+import android.os.Looper;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import com.example.flowsensor12.adapter.BlueToothDeviceAdapter;
-import com.opencsv.CSVWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import android.util.Log;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
-    private BlueToothDeviceAdapter adapter;
+
     private TextView connection_state;
-    private Button Save;
     private TextView text_msg;
     private TextView text_name;
     private BluetoothGatt mBluetoothGatt;
@@ -61,24 +49,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Service and Characteristic
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
     private UUID notify_UUID_chara = UUID.fromString("A7EA14CF-1100-43BA-AB86-1D6E136A2E9E");
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        initPermission();
         initView();
         initData();
-        initPermission();
         initStart();
     }
 
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
-        Save = (Button) findViewById(R.id.savebutton);
         text_msg = (TextView) findViewById(R.id.text_msg);
         text_name = (TextView) findViewById(R.id.text_name);
-        adapter = new BlueToothDeviceAdapter(getApplicationContext(), R.layout.bluetooth_device_list_item);
     }
 
     private void initData() {
@@ -90,21 +74,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initPermission() {
-        if ((checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) || (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) || checkSelfPermission(Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
-            Log.d("MainActivity", "Bluetooth permission is not granted.");
-            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_ADMIN}, 200);
-        }
-        ;//Bluetooth
-
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(MainActivity.this, "This device does not support BLE", Toast.LENGTH_SHORT).show();
             finish();
         }//BLE
 
-        if ((checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            Log.d("MainActivity", "Location permission is not granted.");
-            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 200);
-        } // GPS
+        if ((checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED)
+                || (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED)
+                || (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                || (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            Log.d("MainActivity", "Bluetooth permission is not granted.");
+            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION,}, 200);
+        }//Bluetooth&Location
+        Intent intent = new Intent();
+        intent.setAction(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivity(intent);
     }
 
     public void onClick(View v) {
@@ -125,22 +112,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (!mBluetoothAdapter.isEnabled()) {
                 Log.d("MainActivity", "BluetoothAdapter is not enabled.");
                 Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-                startActivityForResult(turnOn, 0);
+                startActivity(turnOn);
                 Toast.makeText(MainActivity.this, "Please turn on Bluetooth", Toast.LENGTH_SHORT).show();
             }
         }
         Log.d("MainActivity", "BluetoothSearch.");
-        getBoundedDevices();
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
-        //mBluetoothAdapter.startLeScan(scanCallback);
         scanner.startScan(scanCallback);
-        new Handler().postDelayed(new Runnable() {
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
                 //Search off
-                //mBluetoothAdapter.stopLeScan(scanCallback);
                 scanner.stopScan(scanCallback);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -150,10 +134,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
             }
         }, SCAN_PERIOD);
-    }
-
-    private void stopScanDevice() {
-        scanner.stopScan(scanCallback);
     }
 
     ScanCallback scanCallback = new ScanCallback() {
@@ -173,20 +153,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     };
-
-    // Get bounded devices
-    private void getBoundedDevices() {
-        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        //clear the list
-        adapter.clear();
-        initData();
-        //add to the list
-        if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices) {
-                adapter.add(device);
-            }
-        }
-    }
 
     // Connect
     private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {

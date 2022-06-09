@@ -57,9 +57,8 @@ public class save_option extends AppCompatActivity {
     }
 
     public void onClick(View v) {
-        Intent intent = new Intent(this, MainActivity.class);
         saveData();
-        startActivity(intent);
+        finish();
     }
     private void initStoragePermission(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
