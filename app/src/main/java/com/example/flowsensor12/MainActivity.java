@@ -25,6 +25,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -32,6 +39,10 @@ import java.util.List;
 import java.util.UUID;
 import android.util.Log;
 
+import com.opencsv.CSVReader;
+
+import org.apache.commons.math3.analysis.function.Max;
+import org.jtransforms.fft.FloatFFT_1D;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
@@ -212,9 +223,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // Log.d("MainActivity","Lost packages: " + (f1-ble_rx_counter));
             }
             ble_rx_counter = f1;
-            received_data_list.add(f1);
+            /*received_data_list.add(f1);
             received_data_list.add(f2);
-            received_data_list.add(f3);
+            received_data_list.add(f3);*/
+            Fourier();
             //Log.d("MainActivity","received_data_list: "+received_data_list.size());
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
@@ -225,10 +237,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void run() {
                     text_msg.setText(s);
                 }
+
             });
         }
     };
+    public void Fourier() {
+        try {
+            CSVReader reader = new CSVReader(new FileReader("/sdcard/Sensor2.csv"));
+            List<String[]> list = reader.readAll();
+            float[][] dataArr = new float[list.size()][];
+            for (int row = 0; row < list.size(); row++) {
+                String[] thisRowStrings = list.get(row);
+                float[] thisRowFloats = new float[thisRowStrings.length];
+                for (int c = 0; c < thisRowStrings.length; c++) {
+                    thisRowFloats[c] = Float.parseFloat(thisRowStrings[c]);
+                }
+                dataArr[row] = thisRowFloats;
+            }
+            reader.close();
+            int N = dataArr.length;
+            float[] data = new float[N];
+            float[] data_fft = new float[1024];
+            for (int i = 0; i < N; i++) {
+                data[i] = dataArr[i][3];
+            }
+            for (int i = 0; i < N-1024; i++) {
+                for (int j = 0; j < 1024; j++) {
+                    data_fft[j] = data[i + j];
+                }
+                FloatFFT_1D fft = new FloatFFT_1D(1024);
+                fft.realForward(data_fft);
+                for(int k= 0; k < N-1023; k++) {
+                    data_fft[k]= (float) (data_fft[k]/0.001251233545);
+                    Log.d("MainActivity","FFT: "+data_fft[k]);
+                }
+            }
 
+
+        }catch (IOException e){
+                e.printStackTrace();
+            }
+
+
+
+        /*int N = received_data_list.size();
+        float[] data = new float[N];
+        for (int i = 0; i < N; i++) {
+            data[i] = received_data_list.get(i);
+        }
+        FloatFFT_1D fft = new FloatFFT_1D(N);
+        fft.realForward(data);
+        for (int i = 0; i < N; i++) {
+            data[i] = (float) (data[i]/0.001251233545);;
+        }*/
+            //Log.d("MainActivity","Fourier: "+data[0]);
+        }
 }
 
 

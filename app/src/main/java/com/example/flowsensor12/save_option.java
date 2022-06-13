@@ -30,7 +30,7 @@ public class save_option extends AppCompatActivity {
     private TextView flow_rate_2;
     private TextView backpressure_1;
     private TextView backpressure_2;
-    private Button done;
+
     private ArrayList<String> received_data_list_string;
 
     @Override
@@ -53,8 +53,7 @@ public class save_option extends AppCompatActivity {
         flow_rate_2 = findViewById(R.id.flow_rate_2);
         backpressure_1 = findViewById(R.id.backpressure_1);
         backpressure_2 = findViewById(R.id.backpressure_2);
-        done = findViewById(R.id.done);
-    }
+;    }
 
     public void onClick(View v) {
         saveData();
