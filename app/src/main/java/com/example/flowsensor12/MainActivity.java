@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 FloatFFT_1D fft = new FloatFFT_1D(1024);
                 fft.realForward(data_fft);
-                for(int k= 0; k < N-1023; k++) {
+                for(int k= 0; k < 1024; k++) {
                     data_fft[k]= (float) (data_fft[k]/0.001251233545);
                     Log.d("MainActivity","FFT: "+data_fft[k]);
                 }
