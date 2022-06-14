@@ -25,11 +25,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,15 +33,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import android.util.Log;
-
 import com.opencsv.CSVReader;
 
-import org.apache.commons.math3.analysis.function.Max;
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.stat.Frequency;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
 import org.jtransforms.fft.FloatFFT_1D;
+
+import edu.mines.jtk.dsp.KaiserWindow;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
-
     private TextView connection_state;
     private TextView text_msg;
     private TextView text_name;
@@ -242,10 +241,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
     public void Fourier() {
+        //KaiserWindow kaiser = KaiserWindow.fromErrorAndLength(0.8,1024);
         try {
             CSVReader reader = new CSVReader(new FileReader("/sdcard/Sensor2.csv"));
+            CSVReader KAISERWINDOW = new CSVReader(new FileReader("/sdcard/KAISER_WINDOW.csv"));
             List<String[]> list = reader.readAll();
+            List<String[]> kaiser_window = KAISERWINDOW.readAll();
             float[][] dataArr = new float[list.size()][];
+            float[] kaiser_window_arr = new float[kaiser_window.size()];
             for (int row = 0; row < list.size(); row++) {
                 String[] thisRowStrings = list.get(row);
                 float[] thisRowFloats = new float[thisRowStrings.length];
@@ -254,10 +257,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 dataArr[row] = thisRowFloats;
             }
+            for (int row = 0; row < kaiser_window.size(); row++) {
+                String[] thisRowStrings = kaiser_window.get(row);
+                float[] thisRowFloats = new float[thisRowStrings.length];
+                for (int c = 0; c < thisRowStrings.length; c++) {
+                    thisRowFloats[c] = Float.parseFloat(thisRowStrings[c]);
+                }
+                kaiser_window_arr[row] = thisRowFloats[0];
+            }
             reader.close();
             int N = dataArr.length;
             float[] data = new float[N];
-            float[] data_fft = new float[1024];
+            double[] data_fft = new double[1024];
             for (int i = 0; i < N; i++) {
                 data[i] = dataArr[i][3];
             }
@@ -265,14 +276,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 for (int j = 0; j < 1024; j++) {
                     data_fft[j] = data[i + j];
                 }
-                FloatFFT_1D fft = new FloatFFT_1D(1024);
-                fft.realForward(data_fft);
-                for(int k= 0; k < 1024; k++) {
-                    data_fft[k]= (float) (data_fft[k]/0.001251233545);
-                    Log.d("MainActivity","FFT: "+data_fft[k]);
+                for (int k = 0; k < 1024; k++) {
+                    data_fft[k] = getAverage(data_fft);
+                    data_fft[k] = data_fft[k] * kaiser_window_arr[k];
                 }
-            }
-
+                FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+                fft.transform(data_fft, TransformType.FORWARD);
+                //FloatFFT_1D fft = new FloatFFT_1D(1024);
+                //fft.realForward(data_fft);
+                double max = getMax(data_fft);
+                    //Log.d("MainActivity","FFT: "+max);
+                }
 
         }catch (IOException e){
                 e.printStackTrace();
@@ -291,6 +305,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             data[i] = (float) (data[i]/0.001251233545);;
         }*/
             //Log.d("MainActivity","Fourier: "+data[0]);
+        }
+        public double getMax(double[] data) {
+            double max = data[0];
+            for (int i = 0; i < data.length; i++) {
+                if (data[i] > max) {
+                    max = data[i];
+                }
+            }
+            return max;
+        }
+        public double getAverage(double[] data) {
+            float sum = 0;
+            for (int i = 0; i < data.length; i++) {
+                sum += data[i];
+            }
+            return sum/data.length;
         }
 }
 
