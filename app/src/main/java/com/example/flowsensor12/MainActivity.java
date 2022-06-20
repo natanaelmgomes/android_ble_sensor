@@ -44,6 +44,7 @@ import com.opencsv.CSVReader;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.apache.commons.math3.complex.Complex;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
@@ -83,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         scanner = mBluetoothAdapter.getBluetoothLeScanner();
+        Fourier();
     }
 
     private void initKaiserwindow()
@@ -265,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             received_data_list.add(f1);
             received_data_list.add(f2);
             received_data_list.add(f3);
-            Fourier();
+//            Fourier();
             //Log.d("MainActivity","received_data_list: "+received_data_list.size());
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
@@ -284,7 +286,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void Fourier() {
         initKaiserwindow();
         try {
-            CSVReader reader = new CSVReader(new FileReader("/sdcard/Sensor.csv"));
+            InputStream inputStream = getResources().openRawResource(R.raw.sensor);
+            CSVReader reader = new CSVReader(new InputStreamReader(inputStream));
             List<String[]> list = reader.readAll();
             float[][] dataArr = new float[list.size()][];
             for (int row = 0; row < list.size(); row++) {
@@ -297,29 +300,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             reader.close();
             int N = dataArr.length;
+            Log.d("MainActivity", "N: " + N);
             float[] data = new float[N];
             double[] data_fft = new double[1024];
             for (int i = 0; i < N; i++) {
-                data[i] = dataArr[i][3];
+                data[i] = dataArr[i][2];
             }
-            for (int i = 0; i < N-1024; i++) {
+            for (int i = 0; i < N-1024; i=i+100) {
                 for (int j = 0; j < 1024; j++) {
                     data_fft[j] = data[i + j];
                 }
+                double temp_average = getAverage(data_fft);
                 for (int k = 0; k < 1024; k++) {
-                    data_fft[k] = data_fft[k] - getAverage(data_fft);
+                    data_fft[k] = data_fft[k] - temp_average;
                     data_fft[k] = data_fft[k] * kaiser_window[k];
                 }
-                double[] empty = new double[15*1024];
+//                double[] empty = new double[15*1024];
                 double[] data_fft_temp = new double[16*1024];
-                for (int k = 0; k < 1024; k++) {
-                    data_fft_temp[k] = data_fft[k];
+                for (int k = 0; k < 16*1024; k++) {
+                    if (k < 1024) {
+                        data_fft_temp[k] = data_fft[k];
+                    } else {
+                        data_fft_temp[k] = 0;
+                    }
+//                    data_fft_temp[k] = data_fft[k];
                 }
-                for (int k = 1024; k < 15*1024; k++) {
-                    data_fft_temp[k] = empty[k-1024];
-                }
+//                for (int k = 1024; k < 15*1024; k++) {
+//                    data_fft_temp[k] = empty[k-1024];
+//                }
                 FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-                fft.transform(data_fft_temp, TransformType.FORWARD);
+                Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
+
+//                Log.d("MainActivity","FFT: ");
+//                Log.d("MainActivity","Length: " + fft_result.length);
+//                for (int k = 0; k < fft_result.length; k++) {
+//                    Log.d("MainActivity", String.valueOf(fft_result[k]));
+//                }
+//                break;
 
                 /*float [] empty = new float[15*1024];
                 float [] data_fft_temp = new float[16*1024];
@@ -335,13 +352,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     data_fft[k] = data_fft_temp[k];
                 }*/
 
-                double[] data_abs = new double[1024];
-                for (int k = 0; k < 1024; k++) {
-                    data_abs[k] = Math.abs(data_fft[k]);
+                double[] data_abs = new double[8*1024];
+                for (int k = 0; k < 8*1024; k++) {
+                    data_abs[k] = fft_result[k].abs();
                 }
                 double max = getMax(data_abs);
-                    Log.d("MainActivity","FFT: "+max);
-                }
+                int max_index = getMaxIndex(data_abs);
+//                Log.d("MainActivity","Max: " + max);
+                Log.d("MainActivity","Max index: " + max_index);
+                double frequency = (5 / 8192) * max_index;
+                Log.d("MainActivity","Frequency: " + Double.toString(frequency));
+            }
 
         }catch (IOException e){
                 e.printStackTrace();
@@ -349,12 +370,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         public double getMax(double[] data) {
             double max = data[0];
+            int max_index = 0;
             for (int i = 0; i < data.length; i++) {
                 if (data[i] > max) {
                     max = data[i];
+                    max_index = i;
                 }
             }
             return max;
+        }
+        public int getMaxIndex(double[] data) {
+            double max = data[0];
+            int max_index = 0;
+            for (int i = 0; i < data.length; i++) {
+                if (data[i] > max) {
+                    max = data[i];
+                    max_index = i;
+                }
+            }
+            return max_index;
         }
         public double getAverage(double[] data) {
             float sum = 0;
