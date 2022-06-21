@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BluetoothLeScanner scanner;
     private float ble_rx_counter = 0;
     private List<Float> received_data_list;
+    private List<Float> flow_rate_list;
     private ArrayList<String> received_data_list_string;
     float[] kaiser_window = new float[1024];
 
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(MainActivity.this, save_option.class);
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("received_data_list_string", received_data_list_string);
+        bundle.putStringArrayList("flow_rate_list", flow_rate_list);
         intent.putExtras(bundle);
         startActivity(intent);
     }
@@ -235,10 +237,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             float f1 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
-            //String s = String.valueOf("f1:" + f1 + " f2:" + f2 + " f3:" + f3);
-            received_data_list.add(f1);
+            float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             received_data_list.add(f2);
             received_data_list.add(f3);
+            received_data_list.add(f4);
             if (received_data_list.size() > 1024) {
                 Fourier(received_data_list);
             }
@@ -292,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Log.d("MainActivity","max: "+max+" max_index: "+max_index);
             double frequency = 0.0006103515625 * max_index;
             double flow_rate = frequency / 0.001251233545;
+            flow_rate_list.add((float) flow_rate);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {

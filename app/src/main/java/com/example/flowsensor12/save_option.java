@@ -26,6 +26,7 @@ public class save_option extends AppCompatActivity {
     private TextView backpressure_2;
 
     private ArrayList<String> received_data_list_string;
+    private ArrayList<String> flow_rate_list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,7 @@ public class save_option extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         if(bundle != null){
             received_data_list_string = bundle.getStringArrayList("received_data_list_string");
+            flow_rate_list = bundle.getStringArrayList("flow_rate_list");
         }
         initView();
         initStoragePermission();
@@ -72,6 +74,7 @@ public class save_option extends AppCompatActivity {
             String[] data = {TestInfo};
             csvWriter.writeNext(data);
             csvWriter.writeNext(received_data_list_string.toArray(new String[received_data_list_string.size()]));
+            csvWriter.writeNext(flow_rate_list.toArray(new String[flow_rate_list.size()]));
             csvWriter.close();
             Log.d("MainActivity", "Saved.");
         }catch (IOException e) {
