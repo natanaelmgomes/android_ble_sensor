@@ -105,19 +105,21 @@
         android:minHeight="48dp"
         android:text="@string/tester_name"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/done"
-        android:layout_width="237dp"
-        android:layout_height="161dp"
+        android:layout_width="240dp"
+        android:layout_height="160dp"
         android:layout_marginTop="24dp"
         android:layout_marginBottom="120dp"
         android:onClick="onClick"
         android:text="@string/done"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/backpressure_1" />
 

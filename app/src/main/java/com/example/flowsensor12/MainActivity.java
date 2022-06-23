@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private BluetoothLeScanner scanner;
     private float ble_rx_counter = 0;
     private List<Float> received_data_list;
-    private List<Float> flow_rate_list;
     private ArrayList<String> received_data_list_string;
+    private ArrayList<String> flow_rate_list;
     float[] kaiser_window = new float[1024];
 
     //Service and Characteristic
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initData() {
         received_data_list = new ArrayList<Float>();
         received_data_list_string = new ArrayList<String>();
+        flow_rate_list = new ArrayList<String>();
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         scanner = mBluetoothAdapter.getBluetoothLeScanner();
@@ -127,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(MainActivity.this, save_option.class);
         Bundle bundle = new Bundle();
         bundle.putStringArrayList("received_data_list_string", received_data_list_string);
-        bundle.putStringArrayList("flow_rate_list", flow_rate_list);
+        bundle.putStringArrayList("flow_rate_list",flow_rate_list);
         intent.putExtras(bundle);
         startActivity(intent);
     }
@@ -241,9 +242,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             received_data_list.add(f2);
             received_data_list.add(f3);
             received_data_list.add(f4);
+            flow_rate_list = new ArrayList<>();
             if (received_data_list.size() > 1024) {
                 Fourier(received_data_list);
-            }
+            }else{flow_rate_list.add("0");}
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
                 received_data_list_string.add(String.valueOf(received_data_list.get(i)));
@@ -266,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         initKaiserwindow();
         double[] data_fft = new double[1024];
-        for (int i = 0; i < data_sum.length-1024; i=i+10) {
+        for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
             for (int j = 0; j < 1024; j++) {
                 data_fft[j] = data_sum[i + j];
             }
@@ -294,11 +296,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Log.d("MainActivity","max: "+max+" max_index: "+max_index);
             double frequency = 0.0006103515625 * max_index;
             double flow_rate = frequency / 0.001251233545;
-            flow_rate_list.add((float) flow_rate);
+            if(frequency>0.02){
+                flow_rate_list.add(String.valueOf(flow_rate));
+            }else{flow_rate_list.add("0");}
+            //Log.d("MainActivity","frequency: "+frequency+" flow_rate: "+flow_rate);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    text_msg.setText(String.valueOf(flow_rate));
+                    if(frequency>0.02) {
+                        text_msg.setText(String.valueOf((int) flow_rate));
+                    }
                 }
 
             });

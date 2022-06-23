@@ -1,17 +1,23 @@
 package com.example.flowsensor12;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.content.Intent;
+
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
 import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.opencsv.CSVWriter;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +30,7 @@ public class save_option extends AppCompatActivity {
     private TextView flow_rate_2;
     private TextView backpressure_1;
     private TextView backpressure_2;
-
+    private Button done;
     private ArrayList<String> received_data_list_string;
     private ArrayList<String> flow_rate_list;
 
@@ -49,7 +55,8 @@ public class save_option extends AppCompatActivity {
         flow_rate_2 = findViewById(R.id.flow_rate_2);
         backpressure_1 = findViewById(R.id.backpressure_1);
         backpressure_2 = findViewById(R.id.backpressure_2);
-;    }
+        done = findViewById(R.id.done);
+    }
 
     public void onClick(View v) {
         saveData();

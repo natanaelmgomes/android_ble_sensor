@@ -8,7 +8,7 @@
     <string name="search_state">Search State</string>
     <string name="get_msg">Message captured：</string>
     <string name="Save">Save</string>
-    <string name="Connected_Device">Connected Device:</string>
+    <string name="Connected_Device">Device Name</string>
     <string name="msg">Received Message</string>
     <string name="tester_name">Tester name</string>
     <string name="sensor_id_1">Sensor 1 ID</string>
