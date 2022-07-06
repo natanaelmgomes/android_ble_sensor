@@ -244,7 +244,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             received_data_list.add(f4);
             flow_rate_list = new ArrayList<>();
             if (received_data_list.size() > 1024) {
-                Fourier(received_data_list);
+                double[] data_sum = new double[0];
+                for (int i = 0; i < received_data_list.size(); i++) {
+                    data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
+                    data_sum[data_sum.length - 1] = received_data_list.get(i);
+                }
+                initKaiserwindow();
+                double[] data_fft = new double[1024];
+                for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
+                    for (int j = 0; j < 1024; j++) {
+                        data_fft[j] = data_sum[i + j];
+                    }
+                    double temp_average = getAverage(data_fft);
+                    for (int k = 0; k < 1024; k++) {
+                        data_fft[k] = data_fft[k] - temp_average;
+                        data_fft[k] = data_fft[k] * kaiser_window[k];
+                    }
+                    double[] data_fft_temp = new double[16*1024];
+                    for (int k = 0; k < 16*1024; k++) {
+                        if(k<1024) {
+                            data_fft_temp[k] = data_fft[k];
+                        } else {
+                            data_fft_temp[k] = 0;
+                        }
+                    }
+                    FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+                    Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
+                    double[] data_abs = new double[8*1024];
+                    for (int k = 0; k < 8*1024; k++) {
+                        data_abs[k] = fft_result[k].abs();
+                    }
+                    int max_index = getMaxIndex(data_abs);
+                    double frequency = 0.0006103515625 * max_index;
+                    double flow_rate = frequency / 0.001251233545;
+                    if(frequency>0.02){
+                        flow_rate_list.add(String.valueOf(flow_rate));
+                    }else{flow_rate_list.add("0");}
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(frequency>0.02) {
+                                text_msg.setText(String.valueOf((int) flow_rate));
+                            }
+                        }
+
+                    });
+                }
             }else{flow_rate_list.add("0");}
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
@@ -260,57 +305,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-    public void Fourier(List<Float> data) {
-        double[] data_sum = new double[0];
-        for (int i = 0; i < received_data_list.size(); i++) {
-            data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
-            data_sum[data_sum.length - 1] = received_data_list.get(i);
-        }
-        initKaiserwindow();
-        double[] data_fft = new double[1024];
-        for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
-            for (int j = 0; j < 1024; j++) {
-                data_fft[j] = data_sum[i + j];
-            }
-            double temp_average = getAverage(data_fft);
-            for (int k = 0; k < 1024; k++) {
-                data_fft[k] = data_fft[k] - temp_average;
-                data_fft[k] = data_fft[k] * kaiser_window[k];
-            }
-            double[] data_fft_temp = new double[16*1024];
-            for (int k = 0; k < 16*1024; k++) {
-                if(k<1024) {
-                    data_fft_temp[k] = data_fft[k];
-                } else {
-                    data_fft_temp[k] = 0;
-                }
-            }
-            FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-            Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
-            double[] data_abs = new double[8*1024];
-            for (int k = 0; k < 8*1024; k++) {
-                data_abs[k] = fft_result[k].abs();
-            }
-            //double max = getMax(data_abs);
-            int max_index = getMaxIndex(data_abs);
-            //Log.d("MainActivity","max: "+max+" max_index: "+max_index);
-            double frequency = 0.0006103515625 * max_index;
-            double flow_rate = frequency / 0.001251233545;
-            if(frequency>0.02){
-                flow_rate_list.add(String.valueOf(flow_rate));
-            }else{flow_rate_list.add("0");}
-            //Log.d("MainActivity","frequency: "+frequency+" flow_rate: "+flow_rate);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(frequency>0.02) {
-                        text_msg.setText(String.valueOf((int) flow_rate));
-                    }
-                }
-
-            });
-        }
-        }
         public double getMax(double[] data) {
             double max = data[0];
             for (int i = 0; i < data.length; i++) {

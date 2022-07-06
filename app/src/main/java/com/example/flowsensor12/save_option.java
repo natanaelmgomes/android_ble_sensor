@@ -74,7 +74,10 @@ public class save_option extends AppCompatActivity {
         }
     }
     public void saveData()  {
-        String TestInfo = "tester_name:" + tester_name.getText().toString() + "   sensor_id_1:" + sensor_id_1.getText().toString() + "   sensor_id_2:" + sensor_id_2.getText().toString() + "   flow_rate_1:" + flow_rate_1.getText().toString() + "   flow_rate_2:" + flow_rate_2.getText().toString() + "   backpressure_1:" + backpressure_1.getText().toString() + "   backpressure_2:" + backpressure_2.getText().toString() ;
+        String TestInfo = "tester_name:" + tester_name.getText().toString() + "   sensor_id_1:" + sensor_id_1.getText().toString() +
+                "   sensor_id_2:" + sensor_id_2.getText().toString() + "   flow_rate_1:" + flow_rate_1.getText().toString() +
+                "   flow_rate_2:" + flow_rate_2.getText().toString() + "   backpressure_1:" + backpressure_1.getText().toString() +
+                "   backpressure_2:" + backpressure_2.getText().toString() ;
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/" +
                     "test.csv", true));
