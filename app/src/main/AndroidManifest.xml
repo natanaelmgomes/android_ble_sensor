@@ -25,6 +25,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FlowSensor12">
         <activity
+            android:name=".Device_list"
+            android:exported="false" />
+        <activity
             android:name=".save_option"
             android:exported="false" />
         <activity
@@ -37,4 +40,5 @@
             </intent-filter>
         </activity>
     </application>
+
 </manifest>

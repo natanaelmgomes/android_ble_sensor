@@ -20,15 +20,20 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -68,7 +73,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initData();
         initStart();
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_optionmenu, menu);
+        return true;
+    }
+    @Override
+    public boolean onMenuOpened(int featureId, Menu menu) {
+        if (menu != null) {
+            if (menu.getClass().getSimpleName().equalsIgnoreCase("MenuBuilder")) {
+                try {
+                    Method method = menu.getClass().getDeclaredMethod("setOptionalIconsVisible", Boolean.TYPE);
+                    method.setAccessible(true);
+                    method.invoke(menu, true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return super.onMenuOpened(featureId, menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu1:
+                if(connection_state.getText().equals("Connection Success")) {
+                    connection_state.setText(getResources().getString(R.string.disconnect));
+                    mBluetoothGatt.close();
+                }else{
+                    Toast.makeText(this, "Not connected yet", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.menu2:
+                if(connection_state.getText().equals("Connection Fail")||connection_state.getText().equals("Disconnect")) {
+                    initStart();
+                }else{Toast.makeText(this, "Can't reconnect", Toast.LENGTH_LONG).show();}
+                break;
+            case R.id.menu3:
+                Intent intent = new Intent(MainActivity.this, Device_list.class);
+                startActivity(intent);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
         text_msg = (TextView) findViewById(R.id.text_msg);
@@ -244,6 +292,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             received_data_list.add(f4);
             flow_rate_list = new ArrayList<>();
             if (received_data_list.size() > 1024) {
+                int len = 1014;
                 double[] data_sum = new double[0];
                 for (int i = 0; i < received_data_list.size(); i++) {
                     data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
@@ -251,9 +300,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 initKaiserwindow();
                 double[] data_fft = new double[1024];
-                for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
+                //for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
+                if(data_sum.length - len == 10){
+                    len = len + 10;
                     for (int j = 0; j < 1024; j++) {
-                        data_fft[j] = data_sum[i + j];
+                        data_fft[j] = data_sum[len - 1024 + j];
                     }
                     double temp_average = getAverage(data_fft);
                     for (int k = 0; k < 1024; k++) {

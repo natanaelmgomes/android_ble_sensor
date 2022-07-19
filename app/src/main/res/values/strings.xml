@@ -16,4 +16,5 @@
     <string name="flow_rate">Flow rate</string>
     <string name="backpressure">Backpressure</string>
     <string name="done">Done</string>
+    <string name="disconnect">Disconnect</string>
 </resources>
