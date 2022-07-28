@@ -3,11 +3,9 @@ package com.example.flowsensor12;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-
 import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
@@ -15,9 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.opencsv.CSVWriter;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,17 +70,26 @@ public class save_option extends AppCompatActivity {
         }
     }
     public void saveData()  {
-        String TestInfo = "tester_name:" + tester_name.getText().toString() + "   sensor_id_1:" + sensor_id_1.getText().toString() +
-                "   sensor_id_2:" + sensor_id_2.getText().toString() + "   flow_rate_1:" + flow_rate_1.getText().toString() +
-                "   flow_rate_2:" + flow_rate_2.getText().toString() + "   backpressure_1:" + backpressure_1.getText().toString() +
-                "   backpressure_2:" + backpressure_2.getText().toString() ;
+        //String TestInfo = "tester_name:" + tester_name.getText().toString() + "   sensor_id_1:" + sensor_id_1.getText().toString() +
+        //        "   sensor_id_2:" + sensor_id_2.getText().toString() + "   flow_rate_1:" + flow_rate_1.getText().toString() +
+         //       "   flow_rate_2:" + flow_rate_2.getText().toString() + "   backpressure_1:" + backpressure_1.getText().toString() +
+         //       "   backpressure_2:" + backpressure_2.getText().toString() ;
+        final String[][] data = new String[received_data_list_string.size()][];
+        String[] head = {"Info", "Voltage", "Flow rate"};
+        //data[0][0] = "info";
+        //data[0][1] = "voltage";
+        //data[0][2] = "flow rate";
+        String[] info = {"Tester name", "Sensor ID 1", "Sensor ID 2", "Flow rate 1", "Flow rate 2", "Backpressure 1", "Backpressure 2"};
+        for(int i = 1; i < data.length; i++){
+            data[i][0] = info[i-1];
+            data[i][1] = received_data_list_string.get(i-1);
+            data[i][2] = flow_rate_list.get(i-1);
+        }
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/" +
-                    "test.csv", true));
-            String[] data = {TestInfo};
-            csvWriter.writeNext(data);
-            csvWriter.writeNext(received_data_list_string.toArray(new String[received_data_list_string.size()]));
-            csvWriter.writeNext(flow_rate_list.toArray(new String[flow_rate_list.size()]));
+                    "data.csv", true));
+            //String[] data = {TestInfo};
+            //csvWriter.writeNext(data);
             csvWriter.close();
             Log.d("MainActivity", "Saved.");
         }catch (IOException e) {
@@ -92,3 +97,4 @@ public class save_option extends AppCompatActivity {
         }
     }
 }
+

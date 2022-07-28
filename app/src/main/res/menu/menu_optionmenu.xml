@@ -9,4 +9,7 @@
     <item
         android:id="@+id/menu3"
         android:title="Connection list"/>
+    <item
+        android:id="@+id/menu4"
+        android:title="Graph"/>
 </menu>

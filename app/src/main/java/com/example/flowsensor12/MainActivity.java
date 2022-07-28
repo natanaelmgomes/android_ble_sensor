@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<String> received_data_list_string;
     private ArrayList<String> flow_rate_list;
     float[] kaiser_window = new float[1024];
+    private int tmp = 0;
 
     //Service and Characteristic
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -100,13 +101,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.menu1:
                 if(connection_state.getText().equals("Connection Success")) {
                     connection_state.setText(getResources().getString(R.string.disconnect));
+                    text_name.setText(getResources().getString(R.string.Connected_Device));
+                    text_msg.setText(getResources().getString(R.string.flow_rate));
+                    mBluetoothGatt.disconnect();
                     mBluetoothGatt.close();
                 }else{
                     Toast.makeText(this, "Not connected yet", Toast.LENGTH_LONG).show();
                 }
                 break;
             case R.id.menu2:
-                if(connection_state.getText().equals("Connection Fail")||connection_state.getText().equals("Disconnect")) {
+                if(connection_state.getText().equals("Connection Fail")||connection_state.getText().equals("Disconnect")||connection_state.getText().equals("Connection State")){
                     initStart();
                 }else{Toast.makeText(this, "Can't reconnect", Toast.LENGTH_LONG).show();}
                 break;
@@ -114,9 +118,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Intent intent = new Intent(MainActivity.this, Device_list.class);
                 startActivity(intent);
                 break;
+            case R.id.menu4:
+                Intent intent2 = new Intent(MainActivity.this, Graph.class);
+                startActivity(intent2);
+                //String msg = "123";
+                //EventManager.raiseEvent(msg);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
+    //public interface Event {
+        //public void onSomthingHappend(String msg);
+    //}
+
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
         text_msg = (TextView) findViewById(R.id.text_msg);
@@ -288,59 +302,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             received_data_list.add(f2);
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
+            }else{flow_rate_list.add("0");}
             received_data_list.add(f3);
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
+            }else{flow_rate_list.add("0");}
             received_data_list.add(f4);
+            Log.d("MainActivity", "Received data: " + f1 + " " + f2 + " " + f3 + " " + f4);
             flow_rate_list = new ArrayList<>();
-            if (received_data_list.size() > 1024) {
-                int len = 1014;
-                double[] data_sum = new double[0];
-                for (int i = 0; i < received_data_list.size(); i++) {
-                    data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
-                    data_sum[data_sum.length - 1] = received_data_list.get(i);
-                }
-                initKaiserwindow();
-                double[] data_fft = new double[1024];
-                //for (int i = 0,h = 0; i < data_sum.length-1024; i=i+10,h++) {
-                if(data_sum.length - len == 10){
-                    len = len + 10;
-                    for (int j = 0; j < 1024; j++) {
-                        data_fft[j] = data_sum[len - 1024 + j];
-                    }
-                    double temp_average = getAverage(data_fft);
-                    for (int k = 0; k < 1024; k++) {
-                        data_fft[k] = data_fft[k] - temp_average;
-                        data_fft[k] = data_fft[k] * kaiser_window[k];
-                    }
-                    double[] data_fft_temp = new double[16*1024];
-                    for (int k = 0; k < 16*1024; k++) {
-                        if(k<1024) {
-                            data_fft_temp[k] = data_fft[k];
-                        } else {
-                            data_fft_temp[k] = 0;
-                        }
-                    }
-                    FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-                    Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
-                    double[] data_abs = new double[8*1024];
-                    for (int k = 0; k < 8*1024; k++) {
-                        data_abs[k] = fft_result[k].abs();
-                    }
-                    int max_index = getMaxIndex(data_abs);
-                    double frequency = 0.0006103515625 * max_index;
-                    double flow_rate = frequency / 0.001251233545;
-                    if(frequency>0.02){
-                        flow_rate_list.add(String.valueOf(flow_rate));
-                    }else{flow_rate_list.add("0");}
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(frequency>0.02) {
-                                text_msg.setText(String.valueOf((int) flow_rate));
-                            }
-                        }
-
-                    });
-                }
+            Log.d("MainActivity", "received_data_list: " + received_data_list.size());
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
             }else{flow_rate_list.add("0");}
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
@@ -355,6 +329,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
         }
     };
+
+    public void Fourier(List<Float> data) {
+        double[] data_sum = new double[0];
+        for (int i = 0; i < received_data_list.size(); i++) {
+            data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
+            data_sum[data_sum.length - 1] = received_data_list.get(i);
+        }
+        initKaiserwindow();
+        double[] data_fft = new double[1024];
+        //for (int i = 0; i < data_sum.length-1024; i=i+10) {
+            if(tmp <= data_sum.length-1024) {
+            for (int j = 0; j < 1024; j++) {
+                //data_fft[j] = data_sum[i + j];
+                data_fft[j] = data_sum[tmp + j];
+            }
+            tmp = tmp + 10;
+                double temp_average = getAverage(data_fft);
+                for (int k = 0; k < 1024; k++) {
+                    data_fft[k] = data_fft[k] - temp_average;
+                    data_fft[k] = data_fft[k] * kaiser_window[k];
+                }
+                double[] data_fft_temp = new double[16 * 1024];
+                for (int k = 0; k < 16 * 1024; k++) {
+                    if (k < 1024) {
+                        data_fft_temp[k] = data_fft[k];
+                    } else {
+                        data_fft_temp[k] = 0;
+                    }
+                }
+                FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+                Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
+                double[] data_abs = new double[8 * 1024];
+                for (int k = 0; k < 8 * 1024; k++) {
+                    data_abs[k] = fft_result[k].abs();
+                }
+                //double max = getMax(data_abs);
+                int max_index = getMaxIndex(data_abs);
+                //Log.d("MainActivity","max: "+max+" max_index: "+max_index);
+                double frequency = 0.0006103515625 * max_index;
+                double flow_rate = frequency / 0.001251233545;
+                Log.d("MainActivity",   " flow_rate: " + flow_rate);
+                if (frequency > 0.02) {
+                    flow_rate_list.add(String.valueOf(flow_rate));
+                } else {
+                    flow_rate_list.add("0");
+                }
+                //Log.d("MainActivity","frequency: "+frequency+" flow_rate: "+flow_rate);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (frequency > 0.02) {
+                            text_msg.setText(String.valueOf((int) flow_rate));
+                        }
+                    }
+
+                });
+            }
+    }
 
         public double getMax(double[] data) {
             double max = data[0];

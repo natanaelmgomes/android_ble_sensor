@@ -34,7 +34,7 @@ public class Device_list extends AppCompatActivity {
     private BluetoothLeScanner scanner;
     private ListView listView;
     private TextView connection_state;
-    private static final long SCAN_PERIOD = 999999999;
+    private static final long SCAN_PERIOD = 10000;
     private com.example.flowsensor12.adapter.BlueToothDeviceAdapter adapter;
     private BluetoothGatt mBluetoothGatt;
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -47,9 +47,29 @@ public class Device_list extends AppCompatActivity {
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         scanner = mBluetoothAdapter.getBluetoothLeScanner();
+        initSearch();
         initView();
     }
-
+    public void initSearch(){
+        scanner.startScan(mScanCallback);
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                scanner.stopScan(mScanCallback);
+            }
+        }, SCAN_PERIOD);
+    }
+    ScanCallback mScanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            BluetoothDevice device = result.getDevice();
+            Log.d("Device_list", "onScanResult: " + device.getName() + " " + device.getAddress());
+            if(device.getName() != null){
+                adapter.add(device);
+            }
+        }
+    };
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
         listView = (ListView) findViewById(R.id.listView);
@@ -62,18 +82,18 @@ public class Device_list extends AppCompatActivity {
                 if (mBluetoothAdapter.isDiscovering()) {
                     mBluetoothAdapter.cancelDiscovery();
                 }
+                if(mBluetoothGatt != null){
+                    mBluetoothGatt.disconnect();
+                    mBluetoothGatt.close();
+                }
                 BluetoothDevice device = (BluetoothDevice) adapter.getItem(position);
                 connection_state.setText(getResources().getString(R.string.connecting));
-                if (device.getUuids() != null) {
-                    if (device.getUuids().length > 0) {
-                        mBluetoothGatt = device.connectGatt(Device_list.this, true, gattCallback, TRANSPORT_LE);
-                    }
-                }
+                mBluetoothGatt = device.connectGatt(getApplicationContext(), false, mGattCallback);
             }
         });
     }
 
-    private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
@@ -90,10 +110,7 @@ public class Device_list extends AppCompatActivity {
         }
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-
             super.onServicesDiscovered(gatt, status);
-            // Only here is the communicable connection really established
-            // Subscribe to notifications
             BluetoothGattService service;
             service = mBluetoothGatt.getService(notify_UUID_service);
             BluetoothGattCharacteristic characteristic = service.getCharacteristic(notify_UUID_chara);
@@ -113,9 +130,8 @@ public class Device_list extends AppCompatActivity {
         }
     };
     private void getBoundedDevices() {
-        //获取已经配对过的设备
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        //将其添加到设备列表中
+        adapter.clear();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
                 adapter.add(device);
