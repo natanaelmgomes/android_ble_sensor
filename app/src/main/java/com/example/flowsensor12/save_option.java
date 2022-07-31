@@ -2,6 +2,7 @@ package com.example.flowsensor12;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -18,7 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class save_option extends AppCompatActivity {
+public class save_option extends Activity {
     private TextView tester_name;
     private TextView sensor_id_1;
     private TextView sensor_id_2;

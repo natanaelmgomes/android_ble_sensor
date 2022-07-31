@@ -3,6 +3,8 @@ package com.example.flowsensor12;
 import static android.bluetooth.BluetoothDevice.TRANSPORT_LE;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -29,7 +31,7 @@ import android.widget.TextView;
 import java.util.Set;
 import java.util.UUID;
 
-public class Device_list extends AppCompatActivity {
+public class Device_list extends Activity {
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner scanner;
     private ListView listView;
