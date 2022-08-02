@@ -36,7 +36,7 @@ public class Device_list extends Activity {
     private BluetoothLeScanner scanner;
     private ListView listView;
     private TextView connection_state;
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 9999999;
     private com.example.flowsensor12.adapter.BlueToothDeviceAdapter adapter;
     private BluetoothGatt mBluetoothGatt;
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -66,8 +66,12 @@ public class Device_list extends Activity {
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
             BluetoothDevice device = result.getDevice();
-            Log.d("Device_list", "onScanResult: " + device.getName() + " " + device.getAddress());
             if(device.getName() != null){
+                for (int i = 0; i < adapter.getCount(); i++) {
+                    if (adapter.getItem(i).getAddress().equals(device.getAddress())) {
+                        return;
+                    }
+                }
                 adapter.add(device);
             }
         }
@@ -76,8 +80,8 @@ public class Device_list extends Activity {
         connection_state = (TextView) findViewById(R.id.connection_state);
         listView = (ListView) findViewById(R.id.listView);
         adapter = new com.example.flowsensor12.adapter.BlueToothDeviceAdapter(getApplicationContext(), R.layout.bluetooth_device_list_item);
-        listView.setAdapter(adapter);
         getBoundedDevices();
+        listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

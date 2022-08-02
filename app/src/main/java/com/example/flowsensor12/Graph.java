@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.media.metrics.Event;
 import android.os.Bundle;
-
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
@@ -39,31 +38,35 @@ public class Graph extends Activity {
     private void initChart() {
         chart = findViewById(R.id.chart1);
         chart.setBackgroundColor(Color.BLACK);
+        //Zoom & Drag
         chart.setTouchEnabled(true);
-        // 可拖曳
         chart.setDragEnabled(true);
-        // 可缩放
         chart.setScaleEnabled(true);
+        chart.setScaleXEnabled(true);
+        chart.setScaleYEnabled(true);
         chart.setDrawGridBackground(false);
         chart.setPinchZoom(true);
+        chart.setDoubleTapToZoomEnabled(true);
+        //Line Chart
         LineData data = new LineData();
         data.setValueTextColor(Color.RED);
         chart.setData(data);
-        // 图表的注解
+        //Legend
         Legend l = chart.getLegend();
         l.setForm(Legend.LegendForm.LINE);
         l.setTextColor(Color.WHITE);
-        // x坐标轴
+        // XAxis
         XAxis xl = chart.getXAxis();
         xl.setTextColor(Color.WHITE);
         xl.setDrawGridLines(true);
         xl.setAvoidFirstLastClipping(true);
-        // y坐标轴
+        // YAxis left
         YAxis yl = chart.getAxisLeft();
         yl.setTextColor(Color.WHITE);
-        //for (int i = 0;; i=i+10) {
+        // YAxis right
+        YAxis yr = chart.getAxisRight();
+        yr.setTextColor(Color.WHITE);
             addEntry();
-        //}
     }
     private void addEntry() {
         LineData data = chart.getData();

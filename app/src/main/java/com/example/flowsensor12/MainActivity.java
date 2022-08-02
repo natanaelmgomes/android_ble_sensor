@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
@@ -54,6 +55,7 @@ import org.apache.commons.math3.transform.TransformType;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothDevice mBluetoothDevice;
     private TextView connection_state;
     private TextView text_msg;
     private TextView text_name;
@@ -110,11 +112,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         switch (item.getItemId()) {
             case R.id.menu1:
                 if(connection_state.getText().equals("Connection Success")) {
-                    connection_state.setText(getResources().getString(R.string.disconnect));
-                    text_name.setText(getResources().getString(R.string.Connected_Device));
-                    text_msg.setText(getResources().getString(R.string.flow_rate));
                     mBluetoothGatt.disconnect();
-                    mBluetoothGatt.close();
+                    BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+                        @Override
+                        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                            super.onConnectionStateChange(gatt, status, newState);
+                            if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                                connection_state.setText("Disconnected");
+                                mBluetoothGatt.close();
+                                //gatt.close();
+                            }
+                        }
+                    };
                 }else{
                     Toast.makeText(this, "Not connected yet", Toast.LENGTH_LONG).show();
                 }

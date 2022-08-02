@@ -13,7 +13,7 @@ public class DigitalTextView extends androidx.appcompat.widget.AppCompatTextView
         init(context);
     }
     private void init(Context context){
-        String file = "Open 24 Display St.ttf";
+        String file = "Open 24 Display St.TTF";
         AssetManager assets = context.getAssets();
         Typeface font = Typeface.createFromAsset(assets, file);
         setTypeface(font);
