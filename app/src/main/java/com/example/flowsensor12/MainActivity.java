@@ -55,7 +55,6 @@ import org.apache.commons.math3.transform.TransformType;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
-    private BluetoothDevice mBluetoothDevice;
     private TextView connection_state;
     private TextView text_msg;
     private TextView text_name;
@@ -113,17 +112,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.menu1:
                 if(connection_state.getText().equals("Connection Success")) {
                     mBluetoothGatt.disconnect();
-                    BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-                        @Override
-                        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-                            super.onConnectionStateChange(gatt, status, newState);
-                            if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                                connection_state.setText("Disconnected");
-                                mBluetoothGatt.close();
-                                //gatt.close();
-                            }
-                        }
-                    };
+                    connection_state.setText("Disconnect");
                 }else{
                     Toast.makeText(this, "Not connected yet", Toast.LENGTH_LONG).show();
                 }
@@ -259,6 +248,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     if (result.getScanRecord().getServiceUuids().get(0).getUuid().toString().equals("a7ea14cf-1000-43ba-ab86-1d6e136a2e9e")) {
                         connection_state.setText(getResources().getString(R.string.connecting));
                         text_name.setText(device.getName());
+                        if (mBluetoothGatt != null) {
+                            mBluetoothGatt.close();
+                        }
                         mBluetoothGatt = device.connectGatt(MainActivity.this, true, gattCallback, TRANSPORT_LE);
                     }
                 }
@@ -287,7 +279,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // discovery devices
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-
             super.onServicesDiscovered(gatt, status);
             // Only here is the communicable connection really established
             // Subscribe to notifications
