@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
@@ -29,7 +28,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
@@ -41,6 +39,9 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import android.util.Log;
 
@@ -52,6 +53,9 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     private BluetoothAdapter mBluetoothAdapter;
@@ -62,6 +66,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final long SCAN_PERIOD = 999999999;
     private BluetoothLeScanner scanner;
     private float ble_rx_counter = 0;
+    private ArrayList<String> data = new ArrayList<String>();
     private List<Float> received_data_list;
     private ArrayList<String> received_data_list_string;
     private ArrayList<String> flow_rate_list;
@@ -84,6 +89,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
         initView();
         initData();
         initStart();
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //注册监听 已注册监听 不能继续注册
+        if(!EventBus.getDefault().isRegistered(this)){
+            EventBus.getDefault().register(this);
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //取消监听
+        EventBus.getDefault().unregister(this);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetEventBus(Device_list.Messagestate state){
+        if(state.message == "Success"){
+            connection_state.setText("Connection Success");
+        }
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -129,15 +155,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.menu4:
                 Intent intent2 = new Intent(MainActivity.this, Graph.class);
                 startActivity(intent2);
-                //String msg = "123";
-                //EventManager.raiseEvent(msg);
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
-    //public interface Event {
-        //public void onSomthingHappend(String msg);
-    //}
+
+    public static class MessageWrap {
+        public final String message;
+        public static MessageWrap getInstance(String message) {
+            return new MessageWrap(message);
+        }
+
+        private MessageWrap(String message) {
+            this.message = message;
+        }
+    }
 
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
@@ -295,7 +327,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    connection_state.setText(getResources().getString(R.string.connect_success));
+                    connection_state.setText("Connection Success");
                     scanner.stopScan(scanCallback);
                 }
             });
@@ -309,8 +341,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
             ByteBuffer buffer = ByteBuffer.wrap(data);
             float f1 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f2)));
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f3)));
             float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f4)));
             received_data_list.add(f2);
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);

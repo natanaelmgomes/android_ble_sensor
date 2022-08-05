@@ -28,6 +28,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.Set;
 import java.util.UUID;
 
@@ -90,11 +92,13 @@ public class Device_list extends Activity {
                 }
                 if(mBluetoothGatt != null){
                     mBluetoothGatt.disconnect();
-                    mBluetoothGatt.close();
                 }
                 BluetoothDevice device = (BluetoothDevice) adapter.getItem(position);
                 connection_state.setText(getResources().getString(R.string.connecting));
-                mBluetoothGatt = device.connectGatt(getApplicationContext(), false, mGattCallback);
+                if (mBluetoothGatt != null) {
+                    mBluetoothGatt.close();
+                }
+                mBluetoothGatt = device.connectGatt(getApplicationContext(), true, mGattCallback, TRANSPORT_LE);
             }
         });
     }
@@ -107,6 +111,7 @@ public class Device_list extends Activity {
                 // connection success
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     // find service
+                    gatt.discoverServices();
                 }
             } else {
                 // connection failure
@@ -130,11 +135,24 @@ public class Device_list extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    connection_state.setText(getResources().getString(R.string.connect_success));
+                    connection_state.setText("Connection Success");
+                    EventBus.getDefault().postSticky(Device_list.Messagestate.getInstance("Success"));
+                    scanner.stopScan(mScanCallback);
                 }
             });
         }
     };
+
+    public static class Messagestate {
+        public final String message;
+        public static Device_list.Messagestate getInstance(String message) {
+            return new Device_list.Messagestate(message);
+        }
+        private Messagestate(String message) {
+            this.message = message;
+        }
+    }
+
     private void getBoundedDevices() {
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
         adapter.clear();
