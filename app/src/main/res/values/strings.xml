@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="connect_success">Connection Success</string>
+    <string name="connect_fail">Connection Fail</string>
+    <string name="searching">Searching</string>
+    <string name="connecting">Connecting</string>
+    <string name="connect_state">Connection State</string>
+    <string name="search_state">Search State</string>
+</resources>
