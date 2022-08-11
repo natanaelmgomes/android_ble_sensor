@@ -20,11 +20,28 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.opencsv.CSVReader;
+
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
+import org.greenrobot.eventbus.EventBus;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 public class BLE_List extends AppCompatActivity {
@@ -36,6 +53,11 @@ public class BLE_List extends AppCompatActivity {
     private static final long SCAN_PERIOD = 9999999;
     private BlueToothDeviceAdapter adapter;
     private BluetoothGatt mBluetoothGatt;
+    private List<Float> received_data_list;
+    private ArrayList<String> received_data_list_string;
+    private ArrayList<String> flow_rate_list;
+    float[] kaiser_window = new float[1024];
+    private int tmp = 0;
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
     private UUID notify_UUID_chara = UUID.fromString("A7EA14CF-1100-43BA-AB86-1D6E136A2E9E");
 
@@ -49,6 +71,7 @@ public class BLE_List extends AppCompatActivity {
         initSearch();
         initView();
     }
+
     public void initSearch(){
         scanner.startScan(mScanCallback);
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
@@ -73,6 +96,7 @@ public class BLE_List extends AppCompatActivity {
             }
         }
     };
+
     public void initView() {
         connection_state = (TextView) findViewById(R.id.connection_state);
         listView = (ListView) findViewById(R.id.listView);
@@ -96,6 +120,45 @@ public class BLE_List extends AppCompatActivity {
                 mBluetoothGatt = device.connectGatt(getApplicationContext(), true, mGattCallback, TRANSPORT_LE);
             }
         });
+    }
+
+    public static class MessageWrap {
+        public final String message;
+        public static MessageWrap getInstance(String message) {
+            return new MessageWrap(message);
+        }
+        private MessageWrap(String message) {
+            this.message = message;
+        }
+    }
+
+    public static class FlowRateWrap {
+        public final String message;
+        public static FlowRateWrap getInstance(String message) {
+            return new FlowRateWrap(message);
+        }
+        private FlowRateWrap(String message) {
+            this.message = message;
+        }
+    }
+
+    private void initKaiserwindow()
+    {
+        try {
+            InputStream inputStream = getResources().openRawResource(R.raw.kaiser_window);
+            CSVReader KAISERWINDOW = new CSVReader(new InputStreamReader(inputStream));
+            List<String[]> Kaiser_window = KAISERWINDOW.readAll();
+            for (int row = 0; row < Kaiser_window.size(); row++) {
+                String[] thisRowStrings = Kaiser_window.get(row);
+                float[] thisRowFloats = new float[thisRowStrings.length];
+                for (int c = 0; c < thisRowStrings.length; c++) {
+                    thisRowFloats[c] = Float.parseFloat(thisRowStrings[c]);
+                }
+                kaiser_window[row] = thisRowFloats[0];
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -139,5 +202,131 @@ public class BLE_List extends AppCompatActivity {
                 }
             });
         }
+        // Receive data returned by hardware
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicChanged(gatt, characteristic);
+            final byte[] data = characteristic.getValue();
+            ByteBuffer buffer = ByteBuffer.wrap(data);
+            float f1 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f2)));
+            float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f3)));
+            float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f4)));
+            received_data_list.add(f2);
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
+            }else{flow_rate_list.add("0");}
+            received_data_list.add(f3);
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
+            }else{flow_rate_list.add("0");}
+            received_data_list.add(f4);
+            Log.d("MainActivity", "Received data: " + f1 + " " + f2 + " " + f3 + " " + f4);
+            flow_rate_list = new ArrayList<>();
+            Log.d("MainActivity", "received_data_list: " + received_data_list.size());
+            if (received_data_list.size() >= 1024) {
+                Fourier(received_data_list);
+            }else{flow_rate_list.add("0");}
+            received_data_list_string = new ArrayList<>();
+            for (int i = 0; i < received_data_list.size(); i++) {
+                received_data_list_string.add(String.valueOf(received_data_list.get(i)));
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    //text_msg.setText(s);
+                }
+
+            });
+        }
     };
+
+    public void Fourier(List<Float> data) {
+        double[] data_sum = new double[0];
+        for (int i = 0; i < received_data_list.size(); i++) {
+            data_sum = Arrays.copyOf(data_sum, data_sum.length + 1);
+            data_sum[data_sum.length - 1] = received_data_list.get(i);
+        }
+        initKaiserwindow();
+        double[] data_fft = new double[1024];
+        //for (int i = 0; i < data_sum.length-1024; i=i+10) {
+        if(tmp <= data_sum.length-1024) {
+            for (int j = 0; j < 1024; j++) {
+                //data_fft[j] = data_sum[i + j];
+                data_fft[j] = data_sum[tmp + j];
+            }
+            tmp = tmp + 10;
+            double temp_average = getAverage(data_fft);
+            for (int k = 0; k < 1024; k++) {
+                data_fft[k] = data_fft[k] - temp_average;
+                data_fft[k] = data_fft[k] * kaiser_window[k];
+            }
+            double[] data_fft_temp = new double[16 * 1024];
+            for (int k = 0; k < 16 * 1024; k++) {
+                if (k < 1024) {
+                    data_fft_temp[k] = data_fft[k];
+                } else {
+                    data_fft_temp[k] = 0;
+                }
+            }
+            FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+            Complex[] fft_result = fft.transform(data_fft_temp, TransformType.FORWARD);
+            double[] data_abs = new double[8 * 1024];
+            for (int k = 0; k < 8 * 1024; k++) {
+                data_abs[k] = fft_result[k].abs();
+            }
+            //double max = getMax(data_abs);
+            int max_index = getMaxIndex(data_abs);
+            //Log.d("MainActivity","max: "+max+" max_index: "+max_index);
+            double frequency = 0.0006103515625 * max_index;
+            double flow_rate = frequency / 0.001251233545;
+            Log.d("MainActivity",   " flow_rate: " + flow_rate);
+            if (frequency > 0.02) {
+                flow_rate_list.add(String.valueOf(flow_rate));
+            } else {
+                flow_rate_list.add("0");
+            }
+            //Log.d("MainActivity","frequency: "+frequency+" flow_rate: "+flow_rate);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (frequency > 0.02) {
+                        EventBus.getDefault().postSticky(FlowRateWrap.getInstance(String.valueOf((int) flow_rate)));
+                    }
+                }
+
+            });
+        }
+    }
+
+    public double getMax(double[] data) {
+        double max = data[0];
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] > max) {
+                max = data[i];
+            }
+        }
+        return max;
+    }
+    public int getMaxIndex(double[] data) {
+        double max = data[0];
+        int max_index = 0;
+        for (int i = 0; i < data.length; i++) {
+            if (data[i] > max) {
+                max = data[i];
+                max_index = i;
+            }
+        }
+        return max_index;
+    }
+    public double getAverage(double[] data) {
+        float sum = 0;
+        for (int i = 0; i < data.length; i++) {
+            sum += data[i];
+        }
+        return sum/data.length;
+    }
 }
