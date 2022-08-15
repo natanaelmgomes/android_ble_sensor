@@ -42,20 +42,25 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 public class BLE_List extends AppCompatActivity {
 
+    public static BLE_List ble_list = null;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScanner scanner;
     private ListView listView;
     private TextView connection_state;
     private static final long SCAN_PERIOD = 9999999;
     private BlueToothDeviceAdapter adapter;
-    private BluetoothGatt mBluetoothGatt;
+    public BluetoothGatt mBluetoothGatt;
     private List<Float> received_data_list;
-    private ArrayList<String> received_data_list_string;
-    private ArrayList<String> flow_rate_list;
+    public ArrayList<String> received_data_list_string;
+    public ArrayList<Float> flow_rate_list;
+    public String flow_rate_value;
     float[] kaiser_window = new float[1024];
     private int tmp = 0;
     private UUID notify_UUID_service = UUID.fromString("A7EA14CF-1000-43BA-AB86-1D6E136A2E9E");
@@ -68,10 +73,23 @@ public class BLE_List extends AppCompatActivity {
         final BluetoothManager mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         scanner = mBluetoothAdapter.getBluetoothLeScanner();
+        ble_list = this;
         initSearch();
         initView();
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+                           @Override
+                           public void run() {
+                               flow_rate_value = String.valueOf(Math.random() * 100);
+                               EventBus.getDefault().post(new FlowRateWrap(flow_rate_value));
+                           }
+                       }
+        ,0,1000);
     }
-
+    public void onClick(View view) {
+        Intent intent = new Intent(this, Setting_page.class);
+        startActivity(intent);
+}
     public void initSearch(){
         scanner.startScan(mScanCallback);
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
@@ -113,6 +131,8 @@ public class BLE_List extends AppCompatActivity {
                     mBluetoothGatt.disconnect();
                 }
                 BluetoothDevice device = (BluetoothDevice) adapter.getItem(position);
+                EventBus.getDefault().postSticky(DeviceNameWrap.getInstance(device.getName()));
+                EventBus.getDefault().postSticky(DeviceAddressWrap.getInstance(device.getAddress()));
                 connection_state.setText(getResources().getString(R.string.connecting));
                 if (mBluetoothGatt != null) {
                     mBluetoothGatt.close();
@@ -122,22 +142,25 @@ public class BLE_List extends AppCompatActivity {
         });
     }
 
-    public static class MessageWrap {
+    public static class FlowRateWrap {
         public final String message;
-        public static MessageWrap getInstance(String message) {
-            return new MessageWrap(message);
+        public static FlowRateWrap getInstance(String message) {return new FlowRateWrap(message);}
+        private FlowRateWrap(String message) {
+            this.message = message;
         }
-        private MessageWrap(String message) {
+    }
+    public static class DeviceNameWrap {
+        public final String message;
+        public static DeviceNameWrap getInstance(String message) {return new DeviceNameWrap(message);}
+        private DeviceNameWrap(String message) {
             this.message = message;
         }
     }
 
-    public static class FlowRateWrap {
+    public static class DeviceAddressWrap {
         public final String message;
-        public static FlowRateWrap getInstance(String message) {
-            return new FlowRateWrap(message);
-        }
-        private FlowRateWrap(String message) {
+        public static DeviceAddressWrap getInstance(String message) {return new DeviceAddressWrap(message);}
+        private DeviceAddressWrap(String message) {
             this.message = message;
         }
     }
@@ -210,26 +233,23 @@ public class BLE_List extends AppCompatActivity {
             ByteBuffer buffer = ByteBuffer.wrap(data);
             float f1 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
-            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f2)));
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
-            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f3)));
             float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
-            EventBus.getDefault().postSticky(MessageWrap.getInstance(String.valueOf(f4)));
             received_data_list.add(f2);
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
-            }else{flow_rate_list.add("0");}
+            }else{flow_rate_list.add(Float.valueOf("0"));}
             received_data_list.add(f3);
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
-            }else{flow_rate_list.add("0");}
+            }else{flow_rate_list.add(Float.valueOf("0"));}
             received_data_list.add(f4);
             Log.d("MainActivity", "Received data: " + f1 + " " + f2 + " " + f3 + " " + f4);
             flow_rate_list = new ArrayList<>();
             Log.d("MainActivity", "received_data_list: " + received_data_list.size());
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
-            }else{flow_rate_list.add("0");}
+            }else{flow_rate_list.add(Float.valueOf("0"));}
             received_data_list_string = new ArrayList<>();
             for (int i = 0; i < received_data_list.size(); i++) {
                 received_data_list_string.add(String.valueOf(received_data_list.get(i)));
@@ -285,16 +305,16 @@ public class BLE_List extends AppCompatActivity {
             double flow_rate = frequency / 0.001251233545;
             Log.d("MainActivity",   " flow_rate: " + flow_rate);
             if (frequency > 0.02) {
-                flow_rate_list.add(String.valueOf(flow_rate));
+                flow_rate_list.add(Float.valueOf((float) flow_rate));
             } else {
-                flow_rate_list.add("0");
+                flow_rate_list.add(Float.valueOf("0"));
             }
             //Log.d("MainActivity","frequency: "+frequency+" flow_rate: "+flow_rate);
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     if (frequency > 0.02) {
-                        EventBus.getDefault().postSticky(FlowRateWrap.getInstance(String.valueOf((int) flow_rate)));
+                        flow_rate_value = String.valueOf(flow_rate);
                     }
                 }
 

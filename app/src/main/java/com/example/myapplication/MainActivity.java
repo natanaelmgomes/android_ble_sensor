@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClick(View v){
-        Intent intent = new Intent(this,Setting_page.class);
+        Intent intent = new Intent(this,BLE_List.class);
         startActivity(intent);
     }
 }

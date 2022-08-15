@@ -1,12 +1,18 @@
 package com.example.myapplication;
 
+import static com.example.myapplication.BLE_List.ble_list;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Setting_page extends AppCompatActivity {
     Button one_plus;

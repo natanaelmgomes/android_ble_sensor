@@ -6,4 +6,11 @@
     <string name="connecting">Connecting</string>
     <string name="connect_state">Connection State</string>
     <string name="search_state">Search State</string>
+    <string name="tester_name">Tester name</string>
+    <string name="sensor_id_1">Sensor 1 ID</string>
+    <string name="sensor_id_2">Sensor 2 ID</string>
+    <string name="flow_rate">Flow rate</string>
+    <string name="backpressure">Backpressure</string>
+    <string name="done">Done</string>
+    <string name="button">Button</string>
 </resources>
