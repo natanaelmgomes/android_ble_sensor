@@ -22,17 +22,21 @@ public class Setting_page extends AppCompatActivity {
     Button ten_minus;
     Button hun_minus;
     Button confirm;
+    Button Default;
     TextView flow_rate;
     TextView name_input;
     int one_count = 0;
     int ten_count = 0;
     int hun_count = 0;
-    String flow_rate_value = String.valueOf(hun_count) + String.valueOf(ten_count) + String.valueOf(one_count);
+    public static String flow_rate_value;
+    public static Setting_page setting = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting_page);
+        setting = this;
         initView();
+        flow_rate_value = String.valueOf(hun_count) + String.valueOf(ten_count) + String.valueOf(one_count);
         flow_rate.setText(flow_rate_value);
     }
     private void initView() {
@@ -45,6 +49,7 @@ public class Setting_page extends AppCompatActivity {
         confirm = findViewById(R.id.confirm);
         flow_rate = findViewById(R.id.Flow_rate);
         name_input = findViewById(R.id.Name_input);
+        Default = findViewById(R.id.Default);
     }
     public void setOne_plus(View v) {
         if(one_count < 9) {
@@ -92,6 +97,14 @@ public class Setting_page extends AppCompatActivity {
         Intent intent = new Intent(Setting_page.this, Detail.class);
         intent.putExtra("flow_rate", flow_rate_value);
         intent.putExtra("name_input", name_input.getText().toString());
+        MainActivity.main.blueToothDevices.add(name_input.getText().toString());
         startActivity(intent);
+    }
+    public void Default(View v) {
+        one_count = 0;
+        ten_count = 5;
+        hun_count = 0;
+        flow_rate_value = String.valueOf(hun_count) + String.valueOf(ten_count) + String.valueOf(one_count);
+        flow_rate.setText(flow_rate_value);
     }
 }

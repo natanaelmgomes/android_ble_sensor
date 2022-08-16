@@ -1,44 +1,33 @@
 package com.example.myapplication;
 import static com.example.myapplication.BLE_List.ble_list;
-
+import static com.example.myapplication.Setting_page.setting;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.LiveData;
-import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.Notification;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Detail extends AppCompatActivity {
+    public static Detail detail = null;
     TextView flow_rate;
     TextView name;
     Button options;
@@ -46,13 +35,14 @@ public class Detail extends AppCompatActivity {
     Button linechart;
     LineChart lineChart;
     private ArrayList<Float> data = new ArrayList<Float>();
-    public ArrayList<Float> flow_rate_list = new ArrayList<Float>();
+    public static List<Float> flow_rate_list;
     float flow_rate_value = 0;
-    int length;
+    public static boolean warning = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        detail = this;
         initView();
     }
     @Override
@@ -73,9 +63,20 @@ public class Detail extends AppCompatActivity {
     public void onGetEventBus(BLE_List.FlowRateWrap wrap){
         flow_rate_value = Float.parseFloat(wrap.message);
         flow_rate.setText(String.valueOf((int)flow_rate_value));
+        JudgeWarning(flow_rate_value);
+        if(warning == true){
+            flow_rate.setTextColor(Color.RED);
+        }
+        else{
+            flow_rate.setTextColor(Color.GREEN);
+        }
         flow_rate_list.add(flow_rate_value);
-        Log.d("onGetEventBus", String.valueOf(flow_rate_list.size()));
-        setData(flow_rate_list);
+        //Log.d("onGetEventBus", String.valueOf(flow_rate_list.size()));
+        //setData(flow_rate_list);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetEventBus(BLE_List.VoltageWrap wrap){
+        setData(wrap.message);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -104,6 +105,7 @@ public class Detail extends AppCompatActivity {
             case R.id.menu1:
                 BLE_List.ble_list.mBluetoothGatt.disconnect();
                 finish();
+                setting.finish();
                 ble_list.finish();
                 break;
             case R.id.menu2:
@@ -127,7 +129,12 @@ public class Detail extends AppCompatActivity {
     }
 
     public void setOptions(View v) {
+        //Intent intent = new Intent();
+        // intent.setClass(Detail.this, MainActivity.class);
+       // intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        //startActivity(intent);
         finish();
+        setting.finish();
         ble_list.finish();
     }
 
@@ -142,7 +149,7 @@ public class Detail extends AppCompatActivity {
         lineChart.setVisibility(View.VISIBLE);
     }
 
-    private void setData(ArrayList<Float> data) {
+    private void setData(List<Float> data) {
         List<Entry> entries = new ArrayList<>();
         LineDataSet dataSet = new LineDataSet(entries, "Voltage");
         LineData lineData = new LineData(dataSet);
@@ -155,7 +162,7 @@ public class Detail extends AppCompatActivity {
         // lineChart.setBackgroundColor(Color.BLACK);
         for(int i = 0; i < data.size(); i++)
         {
-            entries.add(new Entry(i, data.get(i)));
+            entries.add(new Entry(i,data.get(i)));
         }
         dataSet.setColor(Color.GREEN);
         dataSet.setCircleColor(Color.GREEN);
@@ -166,6 +173,17 @@ public class Detail extends AppCompatActivity {
         lineData.notifyDataChanged();
         lineChart.notifyDataSetChanged();
         lineChart.invalidate();
+    }
+
+    private void JudgeWarning(float flow_rate_value) {
+        if(Math.abs(flow_rate_value-Float.parseFloat(setting.flow_rate_value))>10)
+        {
+            warning = true;
+        }
+        else
+        {
+            warning = false;
+        }
     }
 
 

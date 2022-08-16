@@ -57,8 +57,8 @@ public class BLE_List extends AppCompatActivity {
     private static final long SCAN_PERIOD = 9999999;
     private BlueToothDeviceAdapter adapter;
     public BluetoothGatt mBluetoothGatt;
-    private List<Float> received_data_list;
-    public ArrayList<String> received_data_list_string;
+    private List<Float> received_data_list=new ArrayList<>();
+    public static ArrayList<String> received_data_list_string = new ArrayList<>();
     public ArrayList<Float> flow_rate_list;
     public String flow_rate_value;
     float[] kaiser_window = new float[1024];
@@ -82,6 +82,8 @@ public class BLE_List extends AppCompatActivity {
                            public void run() {
                                flow_rate_value = String.valueOf(Math.random() * 100);
                                EventBus.getDefault().post(new FlowRateWrap(flow_rate_value));
+                               received_data_list.add(Float.valueOf(flow_rate_value));
+                               EventBus.getDefault().post(new VoltageWrap(received_data_list));
                            }
                        }
         ,0,1000);
@@ -131,8 +133,6 @@ public class BLE_List extends AppCompatActivity {
                     mBluetoothGatt.disconnect();
                 }
                 BluetoothDevice device = (BluetoothDevice) adapter.getItem(position);
-                EventBus.getDefault().postSticky(DeviceNameWrap.getInstance(device.getName()));
-                EventBus.getDefault().postSticky(DeviceAddressWrap.getInstance(device.getAddress()));
                 connection_state.setText(getResources().getString(R.string.connecting));
                 if (mBluetoothGatt != null) {
                     mBluetoothGatt.close();
@@ -149,18 +149,10 @@ public class BLE_List extends AppCompatActivity {
             this.message = message;
         }
     }
-    public static class DeviceNameWrap {
-        public final String message;
-        public static DeviceNameWrap getInstance(String message) {return new DeviceNameWrap(message);}
-        private DeviceNameWrap(String message) {
-            this.message = message;
-        }
-    }
-
-    public static class DeviceAddressWrap {
-        public final String message;
-        public static DeviceAddressWrap getInstance(String message) {return new DeviceAddressWrap(message);}
-        private DeviceAddressWrap(String message) {
+    public static class VoltageWrap {
+        public final List<Float> message;
+        public static VoltageWrap getInstance(List<Float> message) {return new VoltageWrap(message);}
+        private VoltageWrap(List<Float> message) {
             this.message = message;
         }
     }
@@ -236,14 +228,17 @@ public class BLE_List extends AppCompatActivity {
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             received_data_list.add(f2);
+            EventBus.getDefault().post(new VoltageWrap(received_data_list));
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
             }else{flow_rate_list.add(Float.valueOf("0"));}
             received_data_list.add(f3);
+            EventBus.getDefault().post(new VoltageWrap(received_data_list));
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
             }else{flow_rate_list.add(Float.valueOf("0"));}
             received_data_list.add(f4);
+            EventBus.getDefault().post(new VoltageWrap(received_data_list));
             Log.d("MainActivity", "Received data: " + f1 + " " + f2 + " " + f3 + " " + f4);
             flow_rate_list = new ArrayList<>();
             Log.d("MainActivity", "received_data_list: " + received_data_list.size());
@@ -315,6 +310,7 @@ public class BLE_List extends AppCompatActivity {
                 public void run() {
                     if (frequency > 0.02) {
                         flow_rate_value = String.valueOf(flow_rate);
+                        EventBus.getDefault().post(new FlowRateWrap(flow_rate_value));
                     }
                 }
 

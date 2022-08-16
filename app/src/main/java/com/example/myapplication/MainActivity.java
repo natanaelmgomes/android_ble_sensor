@@ -9,22 +9,37 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     private Button button;
+    ListView listView;
+    public static BlueToothDevices blueToothDevices;
+    public static MainActivity main = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        main = this;
         initView();
         initPermission();
     }
 
     public void initView() {
+        listView = findViewById(R.id.listView);
         button = findViewById(R.id.add);
+        blueToothDevices = new BlueToothDevices(getApplicationContext(), R.layout.bluetooth_device_list);
+        listView.setAdapter(blueToothDevices);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //TODO
+            }
+        });
     }
 
     private void initPermission() {
