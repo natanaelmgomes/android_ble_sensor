@@ -3,7 +3,6 @@ package com.example.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -15,30 +14,60 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 public class MainActivity extends AppCompatActivity {
-    private Button button;
-    ListView listView;
-    public static BlueToothDevices blueToothDevices;
-    public static MainActivity main = null;
+    Button add;
+    ListView namelist;
+    ListView flowratelist;
+    TextView flowrate;
+    public static InputNames inputnames = null;
+    public static FlowRateDisplay flowratedisplay = null;
+    public static MainActivity mainActivity = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        main = this;
+        mainActivity = this;
         initView();
         initPermission();
     }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //注册监听 已注册监听 不能继续注册
+        if(!EventBus.getDefault().isRegistered(this)){
+            EventBus.getDefault().register(this);
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //取消监听
+        EventBus.getDefault().unregister(this);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetEventBus(NextActivity.MessageWrap wrap){
+        flowratedisplay.clear();
+        flowratedisplay.add(wrap.message);
+    }
 
     public void initView() {
-        listView = findViewById(R.id.listView);
-        button = findViewById(R.id.add);
-        blueToothDevices = new BlueToothDevices(getApplicationContext(), R.layout.bluetooth_device_list);
-        listView.setAdapter(blueToothDevices);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        namelist = findViewById(R.id.Namelist);
+        flowratelist = findViewById(R.id.Flowratelist);
+        add = findViewById(R.id.add);
+        inputnames = new InputNames(getApplicationContext(), R.layout.bluetooth_device_list);
+        flowratedisplay = new FlowRateDisplay(getApplicationContext(), R.layout.bluetooth_device_list);
+        namelist.setAdapter(inputnames);
+        flowratelist.setAdapter(flowratedisplay);
+        namelist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //TODO
+
             }
+
         });
     }
 
@@ -60,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClick(View v){
-        Intent intent = new Intent(this,BLE_List.class);
+        Intent intent = new Intent(this, NextActivity.class);
         startActivity(intent);
     }
 }

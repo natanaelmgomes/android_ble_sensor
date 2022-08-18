@@ -28,18 +28,18 @@ public class save_option extends Activity {
     private TextView backpressure_1;
     private TextView backpressure_2;
     private Button done;
-    //private ArrayList<String> received_data_list_string;
-    //private ArrayList<Float> flow_rate_list;
+    private ArrayList<String> received_data_list_string;
+    private ArrayList<String> flow_rate_list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_save_option);
-        //Bundle bundle = getIntent().getExtras();
-        //if(bundle != null){
-           // received_data_list_string = BLE_List.ble_list.received_data_list_string;
-           // flow_rate_list = BLE_List.ble_list.flow_rate_list;
-        //}
+        Bundle bundle = getIntent().getExtras();
+        if(bundle != null){
+            received_data_list_string = bundle.getStringArrayList("received_data_list_string");
+            flow_rate_list = bundle.getStringArrayList("flow_rate_list");
+           }
         initView();
         initStoragePermission();
     }
@@ -53,11 +53,12 @@ public class save_option extends Activity {
         backpressure_1 = findViewById(R.id.backpressure_1);
         backpressure_2 = findViewById(R.id.backpressure_2);
         done = findViewById(R.id.done);
+
     }
 
     public void onClick(View v) {
         saveData();
-        this.finish();
+        finish();
     }
     private void initStoragePermission(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -75,7 +76,7 @@ public class save_option extends Activity {
         //        "   sensor_id_2:" + sensor_id_2.getText().toString() + "   flow_rate_1:" + flow_rate_1.getText().toString() +
          //       "   flow_rate_2:" + flow_rate_2.getText().toString() + "   backpressure_1:" + backpressure_1.getText().toString() +
          //       "   backpressure_2:" + backpressure_2.getText().toString() ;
-        final String[][] data = new String[BLE_List.ble_list.received_data_list_string.size()][];
+        final String[][] data = new String[received_data_list_string.size()][];
         String[] head = {"Info", "Voltage", "Flow rate"};
         //data[0][0] = "info";
         //data[0][1] = "voltage";
@@ -83,8 +84,8 @@ public class save_option extends Activity {
         String[] info = {"Tester name", "Sensor ID 1", "Sensor ID 2", "Flow rate 1", "Flow rate 2", "Backpressure 1", "Backpressure 2"};
         for(int i = 1; i < data.length; i++){
             data[i][0] = info[i-1];
-            data[i][1] = BLE_List.ble_list.received_data_list_string.get(i-1);
-            data[i][2] = String.valueOf(BLE_List.ble_list.flow_rate_list.get(i-1));
+            data[i][1] = received_data_list_string.get(i-1);
+            data[i][2] = flow_rate_list.get(i-1);
         }
         try {
             CSVWriter csvWriter = new CSVWriter(new FileWriter(Environment.getExternalStorageDirectory() + "/" +

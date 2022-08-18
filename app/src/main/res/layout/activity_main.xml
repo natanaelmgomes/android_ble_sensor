@@ -6,6 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <ListView
+        android:id="@+id/Flowratelist"
+        android:layout_width="200dp"
+        android:layout_height="500dp"
+        android:layout_marginBottom="28dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/listView"></ListView>
+
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="175dp"
@@ -18,16 +29,13 @@
         app:srcCompat="@drawable/sencilia_logo_rgb_dark_blue" />
 
     <ListView
-        android:id="@+id/listView"
-        android:layout_width="400dp"
+        android:id="@+id/Namelist"
+        android:layout_width="200dp"
         android:layout_height="500dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="28dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintStart_toStartOf="parent"></ListView>
 
     <Button
