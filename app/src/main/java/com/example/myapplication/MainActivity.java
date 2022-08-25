@@ -38,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     //Fragment
     private FragmentManager fragmentManager;
     private FragmentTransaction transaction;
-    private Detail fragment;
+    public static Detail[] fragment = new Detail[100];
+    public static int count = 0;
     //Data
     float[] kaiser_window = new float[1024];
     public static InputNames inputnames = null;
@@ -84,7 +85,10 @@ public class MainActivity extends AppCompatActivity {
         namelist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
+                Detail detail = (Detail) inputnames.getItem(position);
+                FragmentTransaction transaction1 = fragmentManager.beginTransaction();
+                transaction1.show(detail).commit();
+                main.setVisibility(View.INVISIBLE);
             }
 
         });
@@ -93,8 +97,9 @@ public class MainActivity extends AppCompatActivity {
     private void initFragment() {
         fragmentManager = getSupportFragmentManager();
         transaction = fragmentManager.beginTransaction();
-        fragment = new Detail();
-        transaction.add(R.id.content, fragment);
+        fragment[count] = new Detail();
+        transaction.add(R.id.content, fragment[count]);
+        count++;
         transaction.commit();
     }
 

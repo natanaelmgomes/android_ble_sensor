@@ -27,6 +27,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -108,19 +110,6 @@ public class Detail extends Fragment {
     private String flow_rate_set_value;
     //detail
     public static boolean warning = false;
-    public Detail() {
-        adapter = new BlueToothDeviceAdapter(MainActivity.mainActivity.getApplicationContext(), R.layout.bluetooth_device_list_item);
-    }
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu1:
-                break;
-            case R.id.menu2:
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
     private void initTest(){
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -292,6 +281,7 @@ public class Detail extends Fragment {
         flow_rate_display = view.findViewById(R.id.flow_rate);
         lineChart = view.findViewById(R.id.chart);
         name = view.findViewById(R.id.name);
+        name.setText(name_input.getText().toString());
     }
     public void initSearch(){
         final BluetoothManager mBluetoothManager = (BluetoothManager) MainActivity.mainActivity.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -534,13 +524,30 @@ public class Detail extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        adapter = new BlueToothDeviceAdapter(MainActivity.mainActivity.getApplicationContext(), R.layout.bluetooth_device_list_item);
+        setHasOptionsMenu(true);
         }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.add("Close").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getTitle().equals("Close"))
+        {
+            MainActivity.mainActivity.getSupportFragmentManager().beginTransaction().hide(this).commit();
+            MainActivity.mainActivity.main.setVisibility(View.VISIBLE);
+            MainActivity.mainActivity.inputnames.add(MainActivity.mainActivity.fragment[MainActivity.mainActivity.count]);
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_detail,container,false);
+
         initView(view);
         initKaiserwindow();
         initSearch();

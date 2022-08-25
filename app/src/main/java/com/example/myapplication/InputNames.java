@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class InputNames extends ArrayAdapter<String> {
+public class InputNames extends ArrayAdapter<Detail> {
     private final LayoutInflater mInflater;
     private int mResource;
     public InputNames(Context context, int resource) {
@@ -23,8 +23,8 @@ public class InputNames extends ArrayAdapter<String> {
             convertView = mInflater.inflate(mResource, parent, false);
         }
         TextView name = (TextView) convertView.findViewById(R.id.name);
-        String name_string = getItem(position);
-        name.setText(name_string);
+        Detail detail = getItem(position);
+        name.setText((CharSequence) detail.name);
         return convertView;
     }
 }

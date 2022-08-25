@@ -190,7 +190,6 @@ public class NextActivity extends AppCompatActivity {
         settingpage.setVisibility(View.INVISIBLE);
         detailpage.setVisibility(View.VISIBLE);
         name.setText(name_input.getText().toString());
-        MainActivity.mainActivity.inputnames.add(name_input.getText().toString());
     }
     public void Default(View v) {
         one_count = 0;
