@@ -1,6 +1,10 @@
 package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.content.Intent;
@@ -10,19 +14,33 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import com.opencsv.CSVReader;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
+    //UI
+    ConstraintLayout main;
     Button add;
     ListView namelist;
     ListView flowratelist;
-    TextView flowrate;
+    //Fragment
+    private FragmentManager fragmentManager;
+    private FragmentTransaction transaction;
+    private Detail fragment;
+    //Data
+    float[] kaiser_window = new float[1024];
     public static InputNames inputnames = null;
     public static FlowRateDisplay flowratedisplay = null;
     public static MainActivity mainActivity = null;
@@ -55,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void initView() {
+        main = findViewById(R.id.Main);
         namelist = findViewById(R.id.Namelist);
         flowratelist = findViewById(R.id.Flowratelist);
         add = findViewById(R.id.add);
@@ -70,6 +89,15 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
+
+    private void initFragment() {
+        fragmentManager = getSupportFragmentManager();
+        transaction = fragmentManager.beginTransaction();
+        fragment = new Detail();
+        transaction.add(R.id.content, fragment);
+        transaction.commit();
+    }
+
 
     private void initPermission() {
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -89,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClick(View v){
-        Intent intent = new Intent(this, NextActivity.class);
-        startActivity(intent);
+        initFragment();
+        main.setVisibility(View.INVISIBLE);
     }
 }

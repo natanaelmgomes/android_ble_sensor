@@ -5,48 +5,64 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/Main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
 
-    <ListView
-        android:id="@+id/Flowratelist"
-        android:layout_width="200dp"
-        android:layout_height="500dp"
-        android:layout_marginBottom="28dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/listView"></ListView>
+        <ListView
+            android:id="@+id/Flowratelist"
+            android:layout_width="200dp"
+            android:layout_height="500dp"
+            android:layout_marginBottom="28dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/listView"></ListView>
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="175dp"
-        android:layout_height="110dp"
-        android:layout_marginTop="4dp"
-        android:contentDescription="TODO"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/sencilia_logo_rgb_dark_blue" />
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="175dp"
+            android:layout_height="110dp"
+            android:layout_marginTop="4dp"
+            android:contentDescription="TODO"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sencilia_logo_rgb_dark_blue" />
 
-    <ListView
-        android:id="@+id/Namelist"
-        android:layout_width="200dp"
-        android:layout_height="500dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginBottom="28dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"></ListView>
+        <ListView
+            android:id="@+id/Namelist"
+            android:layout_width="200dp"
+            android:layout_height="500dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="28dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"></ListView>
 
-    <Button
-        android:id="@+id/add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="onClick"
-        android:text="Add"
-        app:layout_constraintBottom_toTopOf="@+id/listView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        <Button
+            android:id="@+id/add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onClick"
+            android:text="Add"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.194" />
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2">
+
+    </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
