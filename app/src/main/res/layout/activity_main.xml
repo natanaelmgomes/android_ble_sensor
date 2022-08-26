@@ -12,17 +12,6 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="175dp"
-            android:layout_height="110dp"
-            android:layout_marginTop="4dp"
-            android:contentDescription="TODO"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/sencilia_logo_rgb_dark_blue" />
-
         <ListView
             android:id="@+id/Devicelist"
             android:layout_width="400dp"
@@ -45,6 +34,17 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.194" />
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="244dp"
+            android:layout_height="100dp"
+            app:layout_constraintBottom_toTopOf="@+id/add"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/sencilia_logo_rgb" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
