@@ -14,11 +14,11 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
@@ -35,7 +35,6 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -48,12 +47,10 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
-import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -64,6 +61,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 public class Detail extends Fragment {
+    Detail detail = this;
     //UI
     /*BLE*/
     ConstraintLayout blepage;
@@ -525,12 +523,16 @@ public class Detail extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new BlueToothDeviceAdapter(MainActivity.mainActivity.getApplicationContext(), R.layout.bluetooth_device_list_item);
+        MainActivity.mainActivity.devices.add(this);
         setHasOptionsMenu(true);
+        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        actionBar.setTitle("");
         }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         menu.add("Close").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        menu.add("Back").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -538,7 +540,21 @@ public class Detail extends Fragment {
         {
             MainActivity.mainActivity.getSupportFragmentManager().beginTransaction().hide(this).commit();
             MainActivity.mainActivity.main.setVisibility(View.VISIBLE);
-            MainActivity.mainActivity.inputnames.add(MainActivity.mainActivity.fragment[MainActivity.mainActivity.count]);
+        }
+        if (item.getTitle().equals("Back")) {
+            if(blepage.getVisibility() == View.VISIBLE) {
+                MainActivity.mainActivity.getSupportFragmentManager().beginTransaction().hide(this).commit();
+                MainActivity.mainActivity.main.setVisibility(View.VISIBLE);
+            }
+            else if(settingpage.getVisibility() == View.VISIBLE) {
+                settingpage.setVisibility(View.INVISIBLE);
+                blepage.setVisibility(View.VISIBLE);
+            }
+            else if(detailpage.getVisibility() == View.VISIBLE) {
+                detailpage.setVisibility(View.INVISIBLE);
+                settingpage.setVisibility(View.VISIBLE);
+            }
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -547,7 +563,6 @@ public class Detail extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_detail,container,false);
-
         initView(view);
         initKaiserwindow();
         initSearch();

@@ -7,10 +7,10 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-public class InputNames extends ArrayAdapter<Detail> {
+public class Devices extends ArrayAdapter<Detail> {
     private final LayoutInflater mInflater;
     private int mResource;
-    public InputNames(Context context, int resource) {
+    public Devices(Context context, int resource) {
         super(context, resource);
         mInflater = LayoutInflater.from(context);
         mResource = resource;
@@ -23,8 +23,10 @@ public class InputNames extends ArrayAdapter<Detail> {
             convertView = mInflater.inflate(mResource, parent, false);
         }
         TextView name = (TextView) convertView.findViewById(R.id.name);
+        TextView flowrate = (TextView) convertView.findViewById(R.id.flowrate);
         Detail detail = getItem(position);
-        name.setText((CharSequence) detail.name);
+        name.setText(detail.name_input.getText().toString());
+        flowrate.setText(detail.flow_rate_display.getText().toString());
         return convertView;
     }
 }

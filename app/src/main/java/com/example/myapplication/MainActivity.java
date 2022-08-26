@@ -2,39 +2,28 @@ package com.example.myapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import com.opencsv.CSVReader;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-
 public class MainActivity extends AppCompatActivity {
     //UI
     ConstraintLayout main;
     Button add;
-    ListView namelist;
-    ListView flowratelist;
+    ListView devicelist;
     //Fragment
     private FragmentManager fragmentManager;
     private FragmentTransaction transaction;
@@ -42,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     public static int count = 0;
     //Data
     float[] kaiser_window = new float[1024];
-    public static InputNames inputnames = null;
+    public static Devices devices = null;
     public static FlowRateDisplay flowratedisplay = null;
     public static MainActivity mainActivity = null;
     @Override
@@ -75,17 +64,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void initView() {
         main = findViewById(R.id.Main);
-        namelist = findViewById(R.id.Namelist);
-        flowratelist = findViewById(R.id.Flowratelist);
+        devicelist = findViewById(R.id.Devicelist);
         add = findViewById(R.id.add);
-        inputnames = new InputNames(getApplicationContext(), R.layout.bluetooth_device_list);
+        devices = new Devices(getApplicationContext(), R.layout.bluetooth_device_list);
         flowratedisplay = new FlowRateDisplay(getApplicationContext(), R.layout.bluetooth_device_list);
-        namelist.setAdapter(inputnames);
-        flowratelist.setAdapter(flowratedisplay);
-        namelist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        devicelist.setAdapter(devices);
+        devicelist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Detail detail = (Detail) inputnames.getItem(position);
+                Detail detail = (Detail) devices.getItem(position);
                 FragmentTransaction transaction1 = fragmentManager.beginTransaction();
                 transaction1.show(detail).commit();
                 main.setVisibility(View.INVISIBLE);
