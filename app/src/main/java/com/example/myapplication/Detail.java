@@ -47,6 +47,7 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -125,6 +126,7 @@ public class Detail extends Fragment {
                                    flow_rate_display.setTextColor(Color.GREEN);
                                }
                                setData(received_data_list);
+                               EventBus.getDefault().post(new FlowRateWrap(String.valueOf((int)Float.parseFloat(flow_rate_value))));
                            }
                        }
                 ,0,1000);
@@ -242,6 +244,7 @@ public class Detail extends Fragment {
                 flow_rate_set.setText(flow_rate_set_value);
                 settingpage.setVisibility(View.INVISIBLE);
                 detailpage.setVisibility(View.VISIBLE);
+                EventBus.getDefault().post(new NameWrap(name_input.getText().toString()));
             }
         });
         flow_rate_set = view.findViewById(R.id.Flow_rate);
@@ -516,6 +519,26 @@ public class Detail extends Fragment {
         else
         {
             warning = false;
+        }
+    }
+
+    public static class NameWrap {
+        public final String message;
+        public static Detail.NameWrap getInstance(String message) {
+            return new NameWrap(message);
+        }
+        private NameWrap(String message) {
+            this.message = message;
+        }
+    }
+
+    public static class FlowRateWrap {
+        public final String message;
+        public static Detail.FlowRateWrap getInstance(String message) {
+            return new FlowRateWrap(message);
+        }
+        private FlowRateWrap(String message) {
+            this.message = message;
         }
     }
 

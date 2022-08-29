@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
     //Data
     float[] kaiser_window = new float[1024];
     public static Devices devices = null;
-    public static FlowRateDisplay flowratedisplay = null;
     public static MainActivity mainActivity = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,32 +41,11 @@ public class MainActivity extends AppCompatActivity {
         initView();
         initPermission();
     }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        //注册监听 已注册监听 不能继续注册
-        if(!EventBus.getDefault().isRegistered(this)){
-            EventBus.getDefault().register(this);
-        }
-    }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //取消监听
-        EventBus.getDefault().unregister(this);
-    }
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGetEventBus(NextActivity.MessageWrap wrap){
-        flowratedisplay.clear();
-        flowratedisplay.add(wrap.message);
-    }
-
     public void initView() {
         main = findViewById(R.id.Main);
         devicelist = findViewById(R.id.Devicelist);
         add = findViewById(R.id.add);
         devices = new Devices(getApplicationContext(), R.layout.bluetooth_device_list);
-        flowratedisplay = new FlowRateDisplay(getApplicationContext(), R.layout.bluetooth_device_list);
         devicelist.setAdapter(devices);
         devicelist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

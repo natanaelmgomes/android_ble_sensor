@@ -14,13 +14,15 @@
 
         <ListView
             android:id="@+id/Devicelist"
-            android:layout_width="400dp"
+            android:layout_width="370dp"
             android:layout_height="500dp"
-            android:layout_marginBottom="28dp"
             android:orientation="vertical"
+            android:divider="@null"
+            android:dividerHeight="25dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"></ListView>
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/add" />
 
         <Button
             android:id="@+id/add"
