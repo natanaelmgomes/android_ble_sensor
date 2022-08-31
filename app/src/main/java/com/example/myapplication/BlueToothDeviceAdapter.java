@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +30,6 @@ public class BlueToothDeviceAdapter extends ArrayAdapter<BluetoothDevice> {
         BluetoothDevice device = getItem(position);
         name.setText(device.getName());
         info.setText(device.getAddress());
-
         return convertView;
     }
 }

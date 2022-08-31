@@ -62,7 +62,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 public class Detail extends Fragment {
-    Detail detail = this;
+    public static Detail detail = null;
     //UI
     /*BLE*/
     ConstraintLayout blepage;
@@ -542,11 +542,17 @@ public class Detail extends Fragment {
         }
     }
 
+    public String getName() {return name_input.getText().toString();}
+    public String getFlowRate() {
+        return flow_rate_display.getText().toString();
+    }
+    public String getFlowRateSet() {return flow_rate_set_value;}
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         adapter = new BlueToothDeviceAdapter(MainActivity.mainActivity.getApplicationContext(), R.layout.bluetooth_device_list_item);
-        MainActivity.mainActivity.devices.add(this);
+        detail = this;
         setHasOptionsMenu(true);
         ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
         actionBar.setTitle("");

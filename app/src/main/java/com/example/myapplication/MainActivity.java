@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -40,6 +41,25 @@ public class MainActivity extends AppCompatActivity {
         mainActivity = this;
         initView();
         initPermission();
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if(!EventBus.getDefault().isRegistered(this)){
+            EventBus.getDefault().register(this);
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetEventBus(Detail.FlowRateWrap wrap){
+        devices.clear();
+        for(int i = 0; i < count; i++) {
+            devices.add(fragment[i]);
+        }
     }
     public void initView() {
         main = findViewById(R.id.Main);
