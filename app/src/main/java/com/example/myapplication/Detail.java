@@ -14,6 +14,7 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -68,7 +69,6 @@ public class Detail extends Fragment {
     ConstraintLayout blepage;
     ConstraintLayout settingpage;
     ConstraintLayout detailpage;
-    Button next;
     ListView listView;
     /*Setting*/
     Button one_plus;
@@ -126,7 +126,7 @@ public class Detail extends Fragment {
                                    flow_rate_display.setTextColor(Color.GREEN);
                                }
                                setData(received_data_list);
-                               EventBus.getDefault().post(new FlowRateWrap(String.valueOf((int)Float.parseFloat(flow_rate_value))));
+                               EventBus.getDefault().post(new BrokenpointWrap(String.valueOf((int)Float.parseFloat(flow_rate_value))));
                            }
                        }
                 ,0,1000);
@@ -137,14 +137,6 @@ public class Detail extends Fragment {
         settingpage = view.findViewById(R.id.settingpage);
         detailpage = view.findViewById(R.id.detailpage);
         /*BLE*/
-        next = view.findViewById(R.id.next);
-        next.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                blepage.setVisibility(View.INVISIBLE);
-                settingpage.setVisibility(View.VISIBLE);
-            }
-        });
         connection_state = view.findViewById(R.id.connection_state);
         listView = view.findViewById(R.id.listView);
         listView.setAdapter(adapter);
@@ -244,7 +236,6 @@ public class Detail extends Fragment {
                 flow_rate_set.setText(flow_rate_set_value);
                 settingpage.setVisibility(View.INVISIBLE);
                 detailpage.setVisibility(View.VISIBLE);
-                EventBus.getDefault().post(new NameWrap(name_input.getText().toString()));
             }
         });
         flow_rate_set = view.findViewById(R.id.Flow_rate);
@@ -366,7 +357,8 @@ public class Detail extends Fragment {
                     connection_state.setText("Connection Success");
                     scanner.stopScan(mScanCallback);
                     if (connection_state.getText().equals(getResources().getString(R.string.connect_success))) {
-                        next.setEnabled(true);
+                        blepage.setVisibility(View.INVISIBLE);
+                        settingpage.setVisibility(View.VISIBLE);
                     }
                 }
             });
@@ -380,6 +372,7 @@ public class Detail extends Fragment {
             float f2 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f3 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
             float f4 = buffer.order(ByteOrder.LITTLE_ENDIAN).getFloat();
+            EventBus.getDefault().post(new BrokenpointWrap(String.valueOf(f1)));
             received_data_list.add(f2);
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
@@ -389,8 +382,6 @@ public class Detail extends Fragment {
                 Fourier(received_data_list);
             }else{flow_rate_list.add("0");}
             received_data_list.add(f4);
-            Log.d("MainActivity", "Received data: " + f1 + " " + f2 + " " + f3 + " " + f4);
-            Log.d("MainActivity", "received_data_list: " + received_data_list.size());
             if (received_data_list.size() >= 1024) {
                 Fourier(received_data_list);
             }else{flow_rate_list.add("0");}
@@ -459,6 +450,13 @@ public class Detail extends Fragment {
                 public void run() {
                     if (frequency > 0.02) {
                         flow_rate_display.setText(String.valueOf((int)flow_rate));
+                        JudgeWarning(Float.parseFloat(flow_rate_value));
+                        if(warning == true){
+                            flow_rate_display.setTextColor(Color.RED);
+                        }
+                        else{
+                            flow_rate_display.setTextColor(Color.GREEN);
+                        }
                     }
                 }
 
@@ -522,22 +520,12 @@ public class Detail extends Fragment {
         }
     }
 
-    public static class NameWrap {
+    public static class BrokenpointWrap {
         public final String message;
-        public static Detail.NameWrap getInstance(String message) {
-            return new NameWrap(message);
+        public static Detail.BrokenpointWrap getInstance(String message) {
+            return new BrokenpointWrap(message);
         }
-        private NameWrap(String message) {
-            this.message = message;
-        }
-    }
-
-    public static class FlowRateWrap {
-        public final String message;
-        public static Detail.FlowRateWrap getInstance(String message) {
-            return new FlowRateWrap(message);
-        }
-        private FlowRateWrap(String message) {
+        private BrokenpointWrap(String message) {
             this.message = message;
         }
     }
@@ -562,6 +550,7 @@ public class Detail extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         menu.add("Close").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         menu.add("Back").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        menu.add("Save").setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -583,7 +572,14 @@ public class Detail extends Fragment {
                 detailpage.setVisibility(View.INVISIBLE);
                 settingpage.setVisibility(View.VISIBLE);
             }
-
+        }
+        if(item.getTitle().equals("Save")) {
+            Intent intent = new Intent(getActivity(), save_option.class);
+            Bundle bundle = new Bundle();
+            bundle.putStringArrayList("received_data_list_string", received_data_list_string);
+            bundle.putStringArrayList("flow_rate_list",flow_rate_list);
+            intent.putExtras(bundle);
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -595,7 +591,6 @@ public class Detail extends Fragment {
         initView(view);
         initKaiserwindow();
         initSearch();
-        initTest();
         return view;
     }
 }

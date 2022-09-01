@@ -55,7 +55,8 @@ public class MainActivity extends AppCompatActivity {
         EventBus.getDefault().unregister(this);
     }
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGetEventBus(Detail.FlowRateWrap wrap){
+    public void onGetEventBus(Detail.BrokenpointWrap wrap){
+        Log.d("MainActivity", "Broken point:" + wrap);
         devices.clear();
         for(int i = 0; i < count; i++) {
             devices.add(fragment[i]);
